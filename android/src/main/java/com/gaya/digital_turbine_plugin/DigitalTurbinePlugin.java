@@ -1,6 +1,17 @@
 package com.gaya.digital_turbine_plugin;
 
+import android.app.Activity;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
+
+import com.fyber.FairBid;
+import com.fyber.fairbid.ads.ImpressionData;
+import com.fyber.fairbid.ads.Rewarded;
+import com.fyber.fairbid.ads.rewarded.RewardedListener;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
@@ -9,18 +20,6 @@ import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
-
-import android.app.Activity;
-import android.util.Log;
-
-import com.fyber.fairbid.ads.OfferWall;
-import com.fyber.fairbid.ads.offerwall.OfferWallError;
-import com.fyber.fairbid.ads.offerwall.OfferWallListener;
-import com.fyber.fairbid.ads.offerwall.ShowOptions;
-import com.fyber.fairbid.ads.offerwall.VirtualCurrencyRequestOptions;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public class DigitalTurbinePlugin implements FlutterPlugin, MethodCallHandler, ActivityAware {
     private MethodChannel channel;
@@ -38,23 +37,33 @@ public class DigitalTurbinePlugin implements FlutterPlugin, MethodCallHandler, A
         switch (call.method) {
             case "initialize":
                 String appId = call.argument("appId");
-                String userId = call.argument("userId");
-                boolean disableAdvertisingId = call.argument("disableAdvertisingId");
-                initializeSDK(appId, userId, disableAdvertisingId, result);
+                Map<String, Object> args = new HashMap<>();
+                args.put("autoRequestingEnabled", call.argument("autoRequestingEnabled"));
+                args.put("isChild", call.argument("isChild"));
+                initializeSDK(appId, args, result);
                 break;
-            case "showOfferWall":
-                boolean closeOnRedirect = call.argument("closeOnRedirect");
-                Map<String, String> customParameters = call.argument("customParameters");
-                showOfferWall(closeOnRedirect, customParameters, result);
+
+            case "disableAutoRequesting": {
+                String _appId = call.argument("appId");
+                disableAutoRequesting(_appId, result);
                 break;
-            case "requestCurrency":
-                boolean showToastOnReward = call.argument("showToastOnReward");
-                String currencyId = call.argument("currencyId");
-                requestCurrency(showToastOnReward, currencyId, result);
+            }
+
+            case "showRewarded":
+                String placement = call.argument("placementId");
+                showRewarded(placement, result);
                 break;
-            case "setLogLevel":
-                String logLevel = call.argument("logLevel");
-                setLogLevel(logLevel, result);
+            case "requestRewarded":
+                String placementRequest = call.argument("placementId");
+                requestRewarded(placementRequest, result);
+                break;
+            case "isRewardedAvailable":
+                String placementAvailable = call.argument("placementId");
+                isRewardedAvailable(placementAvailable, result);
+                break;
+            case "dispose":
+                disposeRewardedAdListener();
+                result.success(null);
                 break;
             default:
                 result.notImplemented();
@@ -62,77 +71,183 @@ public class DigitalTurbinePlugin implements FlutterPlugin, MethodCallHandler, A
         }
     }
 
-    private void initializeSDK(String appId, String userId, boolean disableAdvertisingId, Result result) {
+    private void initializeSDK(String appId, Map<String, Object> args, Result result) {
+        if (activity == null) {
+            result.error("NO_ACTIVITY", "Activity is not available", null);
+            return;
+        }
+
         try {
-            if (activity == null) {
-                result.error("NO_ACTIVITY", "Activity is not available", null);
-                return;
+            /// Check if the SDK has already been initialized
+            if (FairBid.hasStarted()) {
+                result.success(null);
+            } else {
+                /// Initialize the SDK
+
+                // Retrieve settings from args map with default values
+                boolean autoRequestingEnabled = true; // Default to true if not specified or if null
+                if (args.containsKey("autoRequestingEnabled") && args.get("autoRequestingEnabled") != null) {
+                    autoRequestingEnabled = (Boolean) args.get("autoRequestingEnabled");
+                }
+
+                boolean userAsChild = false; // Default to false if not specified or if null
+                if (args.containsKey("isChild") && args.get("isChild") != null) {
+                    userAsChild = (Boolean) args.get("isChild");
+                }
+
+                // Configure FairBid SDK with the settings
+                FairBid sdk = FairBid.configureForAppId(appId)
+                        .enableLogs();  // Always enable logs, as no condition was specified
+
+                if (!autoRequestingEnabled) {
+                    sdk.disableAutoRequesting();  // Disable auto-requesting if specified
+                }
+
+                if (userAsChild) {
+                    sdk.setUserAChild(true);  // Set user as a child if specified
+                }
+
+                setRewardedAdListener();  // Set the rewarded ad listener
+
+                // Initialize the SDK with the context of the current activity
+                sdk.start(activity);
+
+                result.success(null);  // Notify success
             }
-            OfferWall.setUserId(userId);
-            OfferWall.start(activity, appId, createOfferWallListener(), disableAdvertisingId);
-            result.success(null);
-        } catch (IllegalArgumentException e) {
-            Log.d(TAG, e.getLocalizedMessage());
+
+        } catch (Exception e) {
+            Log.e(TAG, "Initialization error: " + e.getLocalizedMessage(), e);
             result.error("INITIALIZE_ERROR", e.getLocalizedMessage(), null);
         }
     }
 
-    private void showOfferWall(boolean closeOnRedirect, Map<String, String> customParameters, Result result) {
-        ShowOptions showOptions = new ShowOptions(closeOnRedirect, customParameters);
-        OfferWall.show(showOptions);
-        result.success(null);
+    private void disableAutoRequesting(String appId, Result result) {
+        FairBid.configureForAppId(appId).disableAutoRequesting();
+        result.success("AUTO_REQUESTING_DISABLED");
+
     }
 
-    private void requestCurrency(boolean showToastOnReward, String currencyId, Result result) {
-        VirtualCurrencyRequestOptions options = new VirtualCurrencyRequestOptions(showToastOnReward, currencyId);
-        OfferWall.requestCurrency(options);
-        result.success(null);
-    }
-
-    private void setLogLevel(String logLevel, Result result) {
-        switch (logLevel) {
-            case "verbose":
-                OfferWall.setLogLevel(OfferWall.LogLevel.VERBOSE);
-                break;
-            case "debug":
-                OfferWall.setLogLevel(OfferWall.LogLevel.DEBUG);
-                break;
-            case "info":
-                OfferWall.setLogLevel(OfferWall.LogLevel.INFO);
-                break;
-            case "warning":
-                OfferWall.setLogLevel(OfferWall.LogLevel.WARNING);
-                break;
-            case "error":
-                OfferWall.setLogLevel(OfferWall.LogLevel.ERROR);
-                break;
-            default:
-                result.error("INVALID_LOG_LEVEL", "Invalid log level provided", null);
-                return;
+    ///
+    // Rewarded Ad
+    ///
+    private void showRewarded(String placement, Result result) {
+        if (activity == null) {
+            result.error("NO_ACTIVITY", "Activity is not available", null);
+            return;
         }
-        result.success(null);
+
+        try {
+            if (Rewarded.isAvailable(placement)) {
+                Rewarded.show(placement, activity);
+                result.success("REWARDED_AD_SHOWING");
+            } else {
+                result.error("REWARDED_NOT_AVAILABLE", "Rewarded ad is not available", null);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Rewarded ad error: " + e.getLocalizedMessage(), e);
+            result.error("REWARDED_ERROR", e.getLocalizedMessage(), null);
+        }
     }
 
-    private OfferWallListener createOfferWallListener() {
-        return new OfferWallListener() {
+    private void requestRewarded(String placement, Result result) {
+        if (activity == null) {
+            result.error("NO_ACTIVITY", "Activity is not available", null);
+            return;
+        }
+
+        try {
+            if (!Rewarded.isAvailable(placement)) {
+                Rewarded.request(placement);
+                result.success("REWARDED_REQUESTED");
+            } else {
+                result.success("REWARDED_ALREADY_AVAILABLE");
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Rewarded ad error: " + e.getLocalizedMessage(), e);
+            result.error("REWARDED_ERROR", e.getLocalizedMessage(), null);
+        }
+    }
+
+    private void isRewardedAvailable(String placement, Result result) {
+        if (activity == null) {
+            result.error("NO_ACTIVITY", "Activity is not available", null);
+            return;
+        }
+
+        try {
+            result.success(Rewarded.isAvailable(placement));
+        } catch (Exception e) {
+            Log.e(TAG, "Rewarded ad error: " + e.getLocalizedMessage(), e);
+            result.error("REWARDED_ERROR", e.getLocalizedMessage(), null);
+        }
+    }
+
+    private void setRewardedAdListener() {
+        Rewarded.setRewardedListener(new RewardedListener() {
+
             @Override
-            public void onShowError(String placementId, OfferWallError offerWallError) {
-                Log.i("OfferWallListener", "offer wall show error: " + offerWallError);
-                channel.invokeMethod("onShowError", offerWallError.toString());
+            public void onShow(String placement, ImpressionData impressionData) {
+                channel.invokeMethod("onRewardedShow", createArguments(placement, impressionData));
             }
 
             @Override
-            public void onShow(String placementId) {
-                Log.i("OfferWallListener", "offer wall shown! placement id: " + placementId);
-                channel.invokeMethod("onShow", placementId);
+            public void onShowFailure(String placement, ImpressionData impressionData) {
+                channel.invokeMethod("onRewardedShowFail", createArguments(placement, impressionData));
             }
 
             @Override
-            public void onClose(String placementId) {
-                Log.i("OfferWallListener", "offer wall closed! placement id: " + placementId);
-                channel.invokeMethod("onClose", placementId);
+            public void onClick(String placement) {
+                channel.invokeMethod("onRewardedClick", createArguments(placement, null));
             }
-        };
+
+            @Override
+            public void onHide(String placement) {
+                channel.invokeMethod("onRewardedDismiss", createArguments(placement, null));
+            }
+
+            @Override
+            public void onAvailable(String placement) {
+                channel.invokeMethod("onRewardedAvailable", createArguments(placement, null));
+            }
+
+            @Override
+            public void onUnavailable(String placement) {
+                channel.invokeMethod("onRewardedUnavailable", createArguments(placement, null));
+            }
+
+            @Override
+            public void onCompletion(String placement, boolean userRewarded) {
+                Map<String, Object> args = createArguments(placement, null);
+                args.put("userRewarded", userRewarded);
+                channel.invokeMethod("onRewardedComplete", args);
+            }
+
+
+            @Override
+            public void onRequestStart(String s, String s1) {
+                /// Notify the flutter side that the rewarded ad request has started
+
+                Map<String, Object> args = createArguments(s, null);
+                args.put("requestId", s1);
+                channel.invokeMethod("onRewardedWillRequest", args);
+
+            }
+        });
+    }
+
+    private void disposeRewardedAdListener() {
+        Log.d(TAG, "Disposing Rewarded Ad Listener");
+        Rewarded.setRewardedListener(null);
+    }
+
+
+    private Map<String, Object> createArguments(String placement, ImpressionData impressionData) {
+        Map<String, Object> args = new HashMap<>();
+        args.put("placementId", placement);
+        if (impressionData != null) {
+            args.put("impressionData", impressionData.getJsonString());
+        }
+        return args;
     }
 
 
@@ -154,10 +269,13 @@ public class DigitalTurbinePlugin implements FlutterPlugin, MethodCallHandler, A
     @Override
     public void onDetachedFromActivity() {
         activity = null;
+        disposeRewardedAdListener();
     }
 
     @Override
     public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
+        disposeRewardedAdListener();
         channel.setMethodCallHandler(null);
+
     }
 }

@@ -27,15 +27,57 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver implements DigitalTurbineListener {
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver implements DigitalTurbineRewardedListener {
   String _status = 'Not initialized';
   bool _isSDKInitialized = false;
+  String rewardedAdPlacementId = "2200790";
+  String interstitialAdPlacementId = "2200351";
+
+  bool _isRewardAvailable = false;
+  bool _isRewardLoading = false;
+  bool _isRewardWatchSuccess = false;
+
+
+
+
+  bool get isRewardWatchSuccess => _isRewardWatchSuccess;
+  set isRewardWatchSuccess(bool value) {
+    if (_isRewardWatchSuccess != value) {
+      _isRewardWatchSuccess = value;
+      setStateCustom();
+    }
+  }
+  bool get isRewardLoading => _isRewardLoading;
+  set isRewardLoading(bool value) {
+    if (_isRewardLoading != value) {
+      _isRewardLoading = value;
+      setStateCustom();
+    }
+  }
+  bool get isRewardAvailable => _isRewardAvailable;
+  set isRewardAvailable(bool value) {
+    if (_isRewardAvailable != value) {
+      _isRewardAvailable = value;
+      setStateCustom();
+    }
+  }
+
+
+
+  void setStateCustom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      setState(() {});
+    });
+  }
+
+
+
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    DigitalTurbinePlugin.instance.setListener(this);
+    DigitalTurbinePlugin.setRewardedListener(this);
   }
 
   @override
@@ -54,11 +96,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver imp
 
   Future<void> _initializeSDK() async {
     try {
-      await DigitalTurbinePlugin.instance.initialize(
-        appId: "<paste app id>",
-        userId: "<unique user id>",
-      );
-      await DigitalTurbinePlugin.instance.setLogLevel(LogLevel.info);
+      await DigitalTurbinePlugin.initialize(appId: "195099", userId: "1");
       setState(() {
         _status = 'SDK Initialized';
         _isSDKInitialized = true;
@@ -70,34 +108,33 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver imp
     }
   }
 
-  Future<void> _showOfferWall() async {
+  Future<void> _showRewarded() async {
     try {
-      await DigitalTurbinePlugin.instance.showOfferWall(
-        closeOnRedirect: false,
-        customParameters: {'key': 'value'},
-      );
-      setState(() {
-        _status = 'Showing OfferWall';
-      });
+
+      // Check if a Rewarded ad is available
+      bool isAvailable = await DigitalTurbinePlugin.isRewardedAvailable(rewardedAdPlacementId);
+
+      // Show a Rewarded ad
+      if (isAvailable) {
+        await DigitalTurbinePlugin.showRewarded(rewardedAdPlacementId);
+      }
     } catch (e) {
       setState(() {
-        _status = 'Failed to show OfferWall: $e';
+        _status = 'Failed to show Rewarded: $e';
       });
     }
   }
 
-  Future<void> _requestCurrency() async {
+  Future<void> _dipose() async {
     try {
-      await DigitalTurbinePlugin.instance.requestCurrency(
-        showToastOnReward: true,
-        currencyId: 'coins',
-      );
+      await DigitalTurbinePlugin.dispose();
       setState(() {
-        _status = 'Requesting Currency';
+        _status = 'SDK disposed';
+        _isSDKInitialized = false;
       });
     } catch (e) {
       setState(() {
-        _status = 'Failed to request currency: $e';
+        _status = 'Dispose failed: $e';
       });
     }
   }
@@ -112,6 +149,15 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver imp
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            Spacer(),
+            if (_isRewardLoading) const CircularProgressIndicator(),
+            if(_isRewardWatchSuccess) Column(
+              children: [
+                Icon(Icons.check, color: Colors.green, size: 30,),
+                const Text('Reward watch success'),
+              ],
+            ),
+            Spacer(),
             Text(
               'Status: $_status',
               style: Theme.of(context).textTheme.headline6,
@@ -123,14 +169,19 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver imp
             ),
             const SizedBox(height: 10),
             ElevatedButton(
-              onPressed: _isSDKInitialized ? _showOfferWall : null,
-              child: const Text('Show OfferWall'),
+              onPressed: () => DigitalTurbinePlugin.requestRewarded(rewardedAdPlacementId),
+              child: const Text('Request Reward'),
             ),
             const SizedBox(height: 10),
             ElevatedButton(
-              onPressed: _isSDKInitialized ? _requestCurrency : null,
-              child: const Text('Request Currency'),
+              onPressed:_isRewardAvailable? _showRewarded : null,
+              child: const Text('Show Rewarded'),
+            ), const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: isRewardWatchSuccess ? _dipose : null,
+              child: const Text('Dipose'),
             ),
+            Spacer(),
           ],
         ),
       ),
@@ -138,23 +189,51 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver imp
   }
 
   @override
-  void onShowError(String error) {
-    setState(() {
-      _status = 'OfferWall show error: $error';
-    });
+  void onRewardedAvailable(String placementId) {
+    print('Rewarded available: $placementId');
+    /// set reward available
+    isRewardAvailable = true;
+    /// stop loading
+    isRewardLoading = false;
   }
 
   @override
-  void onShow(String? placementId) {
-    setState(() {
-      _status = 'OfferWall shown with placement ID: $placementId';
-    });
+  void onRewardedClick(String placementId) {
+    print('Rewarded click: $placementId');
   }
 
   @override
-  void onClose(String? placementId) {
-    setState(() {
-      _status = 'OfferWall closed with placement ID: $placementId';
-    });
+  void onRewardedComplete(String placementId, bool userRewarded) {
+    print('Rewarded complete: $placementId, userRewarded: $userRewarded');
+    /// set reward watch success
+    isRewardWatchSuccess = true;
+  }
+
+  @override
+  void onRewardedDismiss(String placementId) {
+    print('Rewarded dismiss: $placementId');
+  }
+
+  @override
+  void onRewardedShow(String placementId, String impressionData) {
+    print('Rewarded show: $placementId, impressionData: $impressionData');
+  }
+
+  @override
+  void onRewardedShowFail(String placementId, String error, String impressionData) {
+    print('Rewarded show fail: $placementId, error: $error, impressionData: $impressionData');
+  }
+
+  @override
+  void onRewardedUnavailable(String placementId) {
+    print('Rewarded unavailable: $placementId');
+    /// stop loading
+    isRewardLoading = false;
+  }
+
+  @override
+  void onRewardedWillRequest(String placementId, String requestId) {
+    isRewardLoading = true;
+    print('Rewarded will request: $placementId, requestId: $requestId');
   }
 }

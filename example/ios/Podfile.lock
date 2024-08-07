@@ -25,7 +25,7 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/integration_test/ios"
 
 SPEC CHECKSUMS:
-  digital_turbine_plugin: 33bcb391f9f362b4d3c8f61409e101e1de100514
+  digital_turbine_plugin: 5f98475fbcbe98d9aab4b624ec8fc3e331f9584e
   FairBidSDK: 698612b8007e9e4ee30047ef9e306996909d5cb6
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   integration_test: 13825b8a9334a850581300559b8839134b124670

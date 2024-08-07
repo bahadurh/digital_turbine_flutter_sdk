@@ -10,6 +10,16 @@
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
+		4184D6502C633F3A00A67F44 /* AdSupport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4184D64F2C633F3A00A67F44 /* AdSupport.framework */; };
+		4184D6522C633F4600A67F44 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4184D6512C633F4600A67F44 /* CoreGraphics.framework */; };
+		4184D6542C633F4E00A67F44 /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4184D6532C633F4E00A67F44 /* CoreLocation.framework */; };
+		4184D6562C633F5500A67F44 /* CoreTelephony.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4184D6552C633F5500A67F44 /* CoreTelephony.framework */; };
+		4184D6582C633F5C00A67F44 /* MediaPlayer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4184D6572C633F5C00A67F44 /* MediaPlayer.framework */; };
+		4184D65A2C633F6200A67F44 /* MessageUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4184D6592C633F6200A67F44 /* MessageUI.framework */; };
+		4184D65C2C633F6800A67F44 /* MobileCoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4184D65B2C633F6800A67F44 /* MobileCoreServices.framework */; };
+		4184D65E2C633F6F00A67F44 /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4184D65D2C633F6F00A67F44 /* QuartzCore.framework */; };
+		4184D6602C633F7500A67F44 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4184D65F2C633F7500A67F44 /* Security.framework */; };
+		4184D6642C633F8100A67F44 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4184D6632C633F8100A67F44 /* SystemConfiguration.framework */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
@@ -47,6 +57,16 @@
 		331C807B294A618700263BE5 /* RunnerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RunnerTests.swift; sourceTree = "<group>"; };
 		331C8081294A63A400263BE5 /* RunnerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RunnerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
+		4184D64F2C633F3A00A67F44 /* AdSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdSupport.framework; path = System/Library/Frameworks/AdSupport.framework; sourceTree = SDKROOT; };
+		4184D6512C633F4600A67F44 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		4184D6532C633F4E00A67F44 /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
+		4184D6552C633F5500A67F44 /* CoreTelephony.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreTelephony.framework; path = System/Library/Frameworks/CoreTelephony.framework; sourceTree = SDKROOT; };
+		4184D6572C633F5C00A67F44 /* MediaPlayer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaPlayer.framework; path = System/Library/Frameworks/MediaPlayer.framework; sourceTree = SDKROOT; };
+		4184D6592C633F6200A67F44 /* MessageUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MessageUI.framework; path = System/Library/Frameworks/MessageUI.framework; sourceTree = SDKROOT; };
+		4184D65B2C633F6800A67F44 /* MobileCoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MobileCoreServices.framework; path = System/Library/Frameworks/MobileCoreServices.framework; sourceTree = SDKROOT; };
+		4184D65D2C633F6F00A67F44 /* QuartzCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuartzCore.framework; path = System/Library/Frameworks/QuartzCore.framework; sourceTree = SDKROOT; };
+		4184D65F2C633F7500A67F44 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		4184D6632C633F8100A67F44 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		74858FAD1ED2DC5600515810 /* Runner-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Runner-Bridging-Header.h"; sourceTree = "<group>"; };
 		74858FAE1ED2DC5600515810 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
@@ -72,7 +92,17 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4184D65A2C633F6200A67F44 /* MessageUI.framework in Frameworks */,
+				4184D6542C633F4E00A67F44 /* CoreLocation.framework in Frameworks */,
+				4184D6522C633F4600A67F44 /* CoreGraphics.framework in Frameworks */,
+				4184D6562C633F5500A67F44 /* CoreTelephony.framework in Frameworks */,
 				ACA5D6A13D8BA1EE50B48FD2 /* Pods_Runner.framework in Frameworks */,
+				4184D65C2C633F6800A67F44 /* MobileCoreServices.framework in Frameworks */,
+				4184D6602C633F7500A67F44 /* Security.framework in Frameworks */,
+				4184D6582C633F5C00A67F44 /* MediaPlayer.framework in Frameworks */,
+				4184D6502C633F3A00A67F44 /* AdSupport.framework in Frameworks */,
+				4184D65E2C633F6F00A67F44 /* QuartzCore.framework in Frameworks */,
+				4184D6642C633F8100A67F44 /* SystemConfiguration.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -105,13 +135,22 @@
 				82B55F42265B04AD1372029E /* Pods-RunnerTests.release.xcconfig */,
 				AEE49376C4942C14BFE3470A /* Pods-RunnerTests.profile.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
 		698ED5B125EDEDA3D5DAA719 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				4184D6632C633F8100A67F44 /* SystemConfiguration.framework */,
+				4184D65F2C633F7500A67F44 /* Security.framework */,
+				4184D65D2C633F6F00A67F44 /* QuartzCore.framework */,
+				4184D65B2C633F6800A67F44 /* MobileCoreServices.framework */,
+				4184D6592C633F6200A67F44 /* MessageUI.framework */,
+				4184D6572C633F5C00A67F44 /* MediaPlayer.framework */,
+				4184D6552C633F5500A67F44 /* CoreTelephony.framework */,
+				4184D6532C633F4E00A67F44 /* CoreLocation.framework */,
+				4184D6512C633F4600A67F44 /* CoreGraphics.framework */,
+				4184D64F2C633F3A00A67F44 /* AdSupport.framework */,
 				BA0854C5EE136FC73DF8D080 /* Pods_Runner.framework */,
 				9B6CB027CAEA33AA9A28A771 /* Pods_RunnerTests.framework */,
 			);
@@ -472,7 +511,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-				DEVELOPMENT_TEAM = 9BH7TV3JVJ;
+				DEVELOPMENT_TEAM = 6VJG488H48;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -481,6 +520,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.gaya.digitalTurbinePluginExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRIP_INSTALLED_PRODUCT = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
@@ -657,7 +697,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
-				DEVELOPMENT_TEAM = 9BH7TV3JVJ;
+				DEVELOPMENT_TEAM = 6VJG488H48;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -666,6 +706,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.gaya.digitalTurbinePluginExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRIP_INSTALLED_PRODUCT = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
@@ -689,6 +730,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.gaya.digitalTurbinePluginExample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRIP_INSTALLED_PRODUCT = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				VERSIONING_SYSTEM = "apple-generic";
