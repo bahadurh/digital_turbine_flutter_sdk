@@ -1,15 +1,29 @@
-# digital_turbine_plugin
+# Digital Turbine SDK Integration
 
-A new Flutter plugin project.
+## Overview
+This project integrates the Digital Turbine SDK for both Android and iOS platforms.
 
-## Getting Started
+## Android
+The Android implementation is fully set up with Digital Turbine SDK version 3.5.3.
 
-This project is a starting point for a Flutter
-[plug-in package](https://flutter.dev/developing-packages/),
-a specialized package that includes platform-specific implementation code for
-Android and/or iOS.
+## iOS
+The iOS implementation is currently a work in progress.
 
-For help getting started with Flutter development, view the
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Author
+This project was created by Bahadur.
+
+## Digital Turbine SDK Tutorial
+For detailed instructions on integrating the Digital Turbine SDK, please refer to the [Digital Turbine SDK Integration](https://developer.digitalturbine.com/hc/en-us/sections/9947507543196-SDK-Configurations).
+
+## Setup Instructions
+
+### Android
+1. Make sure your project is compatible with Digital Turbine SDK version 3.5.3.
+2. Follow the steps outlined in the Digital Turbine tutorial for Android integration.
+
+### iOS
+1. Integration is currently in progress. Please check back for updates.
+
+## Contact
+For any questions or issues, please contact Bahadur.
 
