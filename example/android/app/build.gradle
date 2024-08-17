@@ -43,7 +43,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.gaya.digital_turbine_plugin_example"
+        applicationId "com.girlz.app"
         minSdkVersion flutter.minSdkVersion
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()

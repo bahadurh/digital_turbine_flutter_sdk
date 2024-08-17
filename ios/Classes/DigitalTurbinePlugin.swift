@@ -2,8 +2,9 @@ import Flutter
 import UIKit
 import FairBidSDK
 
-public class DigitalTurbinePlugin: NSObject, FlutterPlugin, FYBInterstitialDelegate, FYBRewardedDelegate, FYBBannerDelegate {
+public class DigitalTurbinePlugin: NSObject, FlutterPlugin {
     private var channel: FlutterMethodChannel?
+    private weak var bannerContainerView: UIView?
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "digital_turbine_plugin", binaryMessenger: registrar.messenger())
@@ -12,113 +13,173 @@ public class DigitalTurbinePlugin: NSObject, FlutterPlugin, FYBInterstitialDeleg
         registrar.addMethodCallDelegate(instance, channel: channel)
     }
     
+    
+    // MARK: - Main Handler For Method Channels
+    
+    
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
         case "initialize":
-            if let args = call.arguments as? [String: Any],
-               let appId = args["appId"] as? String {
-                initialize(appId: appId, args: args, result: result)
-            } else {
-                result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for initialize", details: nil))
-            }
+            handleInitialize(call, result: result)
+        case "initializeRewarded":
+            handleInitializeRewarded(call, result: result)
+        case "initializeBanner":
+            handleInitializeBanner(call, result: result)
         case "disableAutoRequesting":
-            if let args = call.arguments as? [String: Any],
-               let adType = args["adType"] as? String,
-               let placementId = args["placementId"] as? String {
-                disableAutoRequesting(adType: adType, placementId: placementId, result: result)
-            } else {
-                result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for disableAutoRequesting", details: nil))
-            }
-            //        case "requestInterstitial":
-            //            if let args = call.arguments as? [String: Any],
-            //               let placementId = args["placementId"] as? String {
-            //                requestInterstitial(placementId: placementId, result: result)
-            //            } else {
-            //                result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for requestInterstitial", details: nil))
-            //            }
-            //        case "showInterstitial":
-            //            if let args = call.arguments as? [String: Any],
-            //               let placementId = args["placementId"] as? String {
-            //                showInterstitial(placementId: placementId, result: result)
-            //            } else {
-            //                result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for showInterstitial", details: nil))
-            //            }
-            //        case "isInterstitialAvailable":
-            //            if let args = call.arguments as? [String: Any],
-            //               let placementId = args["placementId"] as? String {
-            //                isInterstitialAvailable(placementId: placementId, result: result)
-            //            } else {
-            //                result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for isInterstitialAvailable", details: nil))
-            //            }
-            //
+            handleDisableAutoRequesting(call, result: result)
         case "requestRewarded":
-            if let args = call.arguments as? [String: Any],
-               let placementId = args["placementId"] as? String {
-                requestRewarded(placementId: placementId, result: result)
-            } else {
-                result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for requestRewarded", details: nil))
-            }
+            handleRequestRewarded(call, result: result)
         case "showRewarded":
-            if let args = call.arguments as? [String: Any],
-               let placementId = args["placementId"] as? String {
-                showRewarded(placementId: placementId, result: result)
-            } else {
-                result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for showRewarded", details: nil))
-            }
+            handleShowRewarded(call, result: result)
         case "isRewardedAvailable":
-            if let args = call.arguments as? [String: Any],
-               let placementId = args["placementId"] as? String {
-                isRewardedAvailable(placementId: placementId, result: result)
-            } else {
-                result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for isRewardedAvailable", details: nil))
-            }
+            handleIsRewardedAvailable(call, result: result)
+        case "showAdBanner":
+            handleShowAdBanner(call, result: result)
+        case "hideAdBanner":
+            handleHideAdBanner(call, result: result)
+        case "disposeAdBanner":
+            handleDestroyAdBanner(call, result: result)
+        case "disposeRewardAd" :
+            disposeRewarded(result: result)
         default:
             result(FlutterMethodNotImplemented)
         }
     }
     
-    private func initialize(appId: String, args: [String: Any], result: @escaping FlutterResult) {
-         if FairBid.isStarted() {
-            FYBInterstitial.delegate = self
-            FYBRewarded.delegate = self
-            result(nil)
+    private func handleInitialize(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let args = call.arguments as? [String: Any],
+              let appId = args["appId"] as? String else {
+            result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for initialize", details: nil))
+            return
         }
+        initialize(appId: appId, args: args, result: result)
+    }
+    
+    private func handleInitializeRewarded(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let args = call.arguments as? [String: Any],
+              let placementId = args["placementId"] as? String else {
+            result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for initializeRewarded", details: nil))
+            return
+        }
+        initializeRewarded(placementId: placementId, result: result)
+    }
+    
+    private func handleInitializeBanner(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let args = call.arguments as? [String: Any],
+              let placementId = args["placementId"] as? String else {
+            result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for initializeBanner", details: nil))
+            return
+        }
+        initializeBanner(placementId: placementId, result: result)
+    }
+    
+    private func handleDisableAutoRequesting(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let args = call.arguments as? [String: Any],
+              let adType = args["adType"] as? String,
+              let placementId = args["placementId"] as? String else {
+            result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for disableAutoRequesting", details: nil))
+            return
+        }
+        disableAutoRequesting(adType: adType, placementId: placementId, result: result)
+    }
+    
+    private func handleRequestRewarded(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let args = call.arguments as? [String: Any],
+              let placementId = args["placementId"] as? String else {
+            result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for requestRewarded", details: nil))
+            return
+        }
+        requestRewarded(placementId: placementId, result: result)
+    }
+    
+    private func handleShowRewarded(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let args = call.arguments as? [String: Any],
+              let placementId = args["placementId"] as? String else {
+            result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for showRewarded", details: nil))
+            return
+        }
+        showRewarded(placementId: placementId, result: result)
+    }
+    
+    private func handleIsRewardedAvailable(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let args = call.arguments as? [String: Any],
+              let placementId = args["placementId"] as? String else {
+            result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for isRewardedAvailable", details: nil))
+            return
+        }
+        isRewardedAvailable(placementId: placementId, result: result)
+    }
+    
+    private func handleShowAdBanner(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let args = call.arguments as? [String: Any],
+              let placementId = args["placementId"] as? String else {
+            result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for showAdBanner", details: nil))
+            return
+        }
+        showAdBanner(placementId: placementId, result: result)
+    }
+    
+    private func handleHideAdBanner(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let args = call.arguments as? [String: Any],
+              let placementId = args["placementId"] as? String else {
+            result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for hideAdBanner", details: nil))
+            return
+        }
+        hideAdBanner(placementId: placementId, result: result)
+    }
+    
+    private func handleDestroyAdBanner(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let args = call.arguments as? [String: Any],
+              let placementId = args["placementId"] as? String else {
+            result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for destroyAdBanner", details: nil))
+            return
+        }
+        destroyAdBanner(placementId: placementId, result: result)
+    }
+    
+    private func initialize(appId: String, args: [String: Any], result: @escaping FlutterResult) {
+        if FairBid.isStarted() {
+            result(nil)
+            return
+        }
+        
         let options = FYBStartOptions()
         
         if let logLevel = args["logLevel"] as? String {
-            let _logLevel = logLevelFromString(logLevel)
-            options.logLevel = _logLevel
+            options.logLevel = logLevelFromString(logLevel)
         }
         
         if let thirdPartyLogEnabled = args["thirdPartyLogEnabled"] as? Bool {
             options.thirdPartyLoggingEnabled = thirdPartyLogEnabled
         }
         
-        /// By default, DT FairBid SDK starts with auto-request enabled for all placements.
-        /// _This means two things:
-        /// 1. When a user finishes watching an ad, DT FairBid immediately tries to replace that ad.
-        /// 2. When a certain placement has trouble obtaining a fill (no traditional mediated network has available inventory and no programmatic demand is bidding within a predetermined amount of time), DT FairBid continues trying to ensure that placement gets a fill by restarting the entire ad request process. This is performed in exponentially increasing time intervals to optimize the chances of getting a fill while minimizing usage of device resources.
         if let autoRequestingEnabled = args["autoRequestingEnabled"] as? Bool {
             options.autoRequestingEnabled = autoRequestingEnabled
         }
         
-        /// The "IsChild" API is designed to help publishers comply with age-related policies such as COPPA, GDPR, and Google Play’s Families Ads Program.
-        /// This API enables publishers to flag certain users as children. The term Children refers to individuals under a certain age, as defined under applicable data privacy laws.
         if let isChild = args["isChild"] as? Bool {
             options.isChild = isChild
         }
         
-        
         FairBid.start(withAppId: appId, options: options)
-        FYBInterstitial.delegate = self
+        result(nil)
+    }
+    
+    private func initializeRewarded(placementId: String, result: @escaping FlutterResult) {
         FYBRewarded.delegate = self
+        FYBRewarded.request(placementId)
+        result(nil)
+    }
+    
+    private func initializeBanner(placementId: String, result: @escaping FlutterResult) {
+        FYBBanner.delegate = self
+        let options = FYBBannerOptions(placementId: placementId, size: .MREC)
+        FYBBanner.request(with: options)
         result(nil)
     }
     
     private func disableAutoRequesting(adType: String, placementId: String, result: @escaping FlutterResult) {
         switch adType.lowercased() {
-        case "interstitial":
-            FYBInterstitial.disableAutoRequesting(placementId)
         case "rewarded":
             FYBRewarded.disableAutoRequesting(placementId)
         default:
@@ -128,24 +189,20 @@ public class DigitalTurbinePlugin: NSObject, FlutterPlugin, FYBInterstitialDeleg
         result(nil)
     }
     
-    private func requestInterstitial(placementId: String, result: @escaping FlutterResult) {
-        FYBInterstitial.request(placementId)
-        result(nil)
-    }
-    
-    private func showInterstitial(placementId: String, result: @escaping FlutterResult) {
-        if FYBInterstitial.isAvailable(placementId) {
-            FYBInterstitial.show(placementId)
-            result(nil)
-        } else {
-            result(FlutterError(code: "UNAVAILABLE", message: "Interstitial is not available", details: nil))
+    private func logLevelFromString(_ logLevel: String) -> FYBLoggingLevel {
+        switch logLevel.lowercased() {
+        case "verbose": return .verbose
+        case "info": return .info
+        case "error": return .error
+        default: return .info
         }
     }
-    
-    private func isInterstitialAvailable(placementId: String, result: @escaping FlutterResult) {
-        result(FYBInterstitial.isAvailable(placementId))
-    }
-    
+}
+
+
+// MARK: - Rewarded Ad Extension
+
+extension DigitalTurbinePlugin {
     private func requestRewarded(placementId: String, result: @escaping FlutterResult) {
         FYBRewarded.request(placementId)
         result(nil)
@@ -163,53 +220,48 @@ public class DigitalTurbinePlugin: NSObject, FlutterPlugin, FYBInterstitialDeleg
     private func isRewardedAvailable(placementId: String, result: @escaping FlutterResult) {
         result(FYBRewarded.isAvailable(placementId))
     }
-    
-    private func logLevelFromString(_ logLevel: String) -> FYBLoggingLevel {
-        switch logLevel.lowercased() {
-        case "verbose":
-            return .verbose
-        case "info":
-            return .info
-        case "error":
-            return .error
-        default:
-            return .info
+    private func disposeRewarded(result: @escaping FlutterResult) {
+        FYBRewarded.delegate = nil
+        
+        result("DISPOSED_REWARDED")
+    }
+}
+
+
+
+// MARK: - Banner Ad Extension
+
+
+extension DigitalTurbinePlugin {
+    private func showAdBanner(placementId: String, result: @escaping FlutterResult) {
+        let options = FYBBannerOptions(placementId: placementId, size: .MREC) 
+        
+        if let rootViewController = UIApplication.shared.keyWindow?.rootViewController {
+            FYBBanner.show(in: rootViewController.view, options: options)
+            result("\(placementId) : Showing Ad Banner")
+        } else {
+            result(FlutterError(code: "NO_ROOT_VIEW_CONTROLLER", message: "Unable to find root view controller", details: nil))
         }
     }
     
-    // MARK: - FYBInterstitialDelegate
-    //
-    //    public func interstitialIsAvailable(_ placementId: String) {
-    //        channel?.invokeMethod("onInterstitialAvailable", arguments: ["placementId": placementId])
-    //    }
-    //
-    //    public func interstitialIsUnavailable(_ placementId: String) {
-    //        channel?.invokeMethod("onInterstitialUnavailable", arguments: ["placementId": placementId])
-    //    }
-    //
-    //    public func interstitialDidShow(_ placementId: String, impressionData: FYBImpressionData) {
-    //        channel?.invokeMethod("onInterstitialShow", arguments: ["placementId": placementId, "impressionData": impressionData.description])
-    //    }
-    //
-    //    public func interstitialDidFail(toShow placementId: String, withError error: Error, impressionData: FYBImpressionData) {
-    //        channel?.invokeMethod("onInterstitialShowFail", arguments: ["placementId": placementId, "error": error.localizedDescription, "impressionData": impressionData.description])
-    //    }
-    //
-    //    public func interstitialDidClick(_ placementId: String) {
-    //        channel?.invokeMethod("onInterstitialClick", arguments: ["placementId": placementId])
-    //    }
-    //
-    //    public func interstitialDidDismiss(_ placementId: String) {
-    //        channel?.invokeMethod("onInterstitialDismiss", arguments: ["placementId": placementId])
-    //    }
-    //
-    //    public func interstitialWillRequest(_ placementId: String, withRequestId requestId: String) {
-    //        channel?.invokeMethod("onInterstitialWillRequest", arguments: ["placementId": placementId, "requestId": requestId])
-    //    }
+    private func hideAdBanner(placementId: String, result: @escaping FlutterResult) {
+        FYBBanner.hide(placementId)
+        result("\(placementId) : Ad Banner has been hidden")
+    }
     
-    // MARK: - FYBRewardedDelegate
-    /// https://developer.digitalturbine.com/hc/en-us/articles/360013525277-iOS-Ad-Formats
-    
+    private func destroyAdBanner(placementId: String, result: @escaping FlutterResult) {
+        FYBBanner.destroy(placementId)
+        FYBBanner.delegate = nil
+        result("\(placementId) : Ad Banner has been destroyed")
+    }
+}
+
+
+
+// MARK: - FYBRewardedDelegate
+
+
+extension DigitalTurbinePlugin: FYBRewardedDelegate {
     public func rewardedIsAvailable(_ placementId: String) {
         channel?.invokeMethod("onRewardedAvailable", arguments: ["placementId": placementId])
     }
@@ -240,5 +292,49 @@ public class DigitalTurbinePlugin: NSObject, FlutterPlugin, FYBInterstitialDeleg
     
     public func rewardedWillRequest(_ placementId: String, withRequestId requestId: String) {
         channel?.invokeMethod("onRewardedWillRequest", arguments: ["placementId": placementId, "requestId": requestId])
+    }
+}
+
+
+
+// MARK: - FYBBannerDelegate
+
+
+extension DigitalTurbinePlugin: FYBBannerDelegate {
+    public func bannerDidLoad(_ banner: FYBBannerAdView, impressionData: FYBImpressionData) {
+        let args: [String: Any] = [
+            "placementId": banner.options.placementId,
+            "impressionData": impressionData.jsonString ?? "unknown"
+        ]
+        channel?.invokeMethod("onBannerLoad", arguments: args)
+    }
+    
+    public func bannerDidFail(toLoad placementId: String, withError error: Error) {
+        let args: [String: Any] = [
+            "placementId": placementId,
+            "error": error.localizedDescription
+        ]
+        channel?.invokeMethod("onBannerError", arguments: args)
+    }
+    
+    public func bannerDidShow(_ banner: FYBBannerAdView, impressionData: FYBImpressionData) {
+        let args: [String: Any] = [
+            "placementId": banner.options.placementId,
+            "impressionData": impressionData.jsonString ?? "unknown"
+        ]
+        channel?.invokeMethod("onBannerShow", arguments: args)
+    }
+    
+    public func bannerDidClick(_ banner: FYBBannerAdView) {
+        let args: [String: Any] = ["placementId": banner.options.placementId]
+        channel?.invokeMethod("onBannerClick", arguments: args)
+    }
+    
+    public func bannerWillRequest(_ placementId: String, withRequestId requestId: String) {
+        let args: [String: Any] = [
+            "placementId": placementId,
+            "requestId": requestId
+        ]
+        channel?.invokeMethod("onBannerRequestStart", arguments: args)
     }
 }

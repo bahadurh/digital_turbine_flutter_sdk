@@ -1,4 +1,4 @@
-package com.gaya.digital_turbine_plugin_example
+package com.girlz.app
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -6,8 +6,13 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.fyber.FairBid;
+import com.fyber.fairbid.ads.Banner;
 import com.fyber.fairbid.ads.ImpressionData;
 import com.fyber.fairbid.ads.Rewarded;
+import com.fyber.fairbid.ads.banner.BannerError;
+import com.fyber.fairbid.ads.banner.BannerListener;
+import com.fyber.fairbid.ads.banner.BannerOptions;
+import com.fyber.fairbid.ads.banner.BannerSize;
 import com.fyber.fairbid.ads.rewarded.RewardedListener;
 
 import java.util.HashMap;
@@ -36,34 +41,37 @@ public class DigitalTurbinePlugin implements FlutterPlugin, MethodCallHandler, A
     public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
         switch (call.method) {
             case "initialize":
-                String appId = call.argument("appId");
-                Map<String, Object> args = new HashMap<>();
-                args.put("autoRequestingEnabled", call.argument("autoRequestingEnabled"));
-                args.put("isChild", call.argument("isChild"));
-                initializeSDK(appId, args, result);
+                handleInitialize(call, result);
                 break;
-
-            case "disableAutoRequesting": {
-                String _appId = call.argument("appId");
-                disableAutoRequesting(_appId, result);
+            case "initializeRewarded":
+                handleInitializeRewarded(call, result);
                 break;
-            }
-
-            case "showRewarded":
-                String placement = call.argument("placementId");
-                showRewarded(placement, result);
+            case "initializeBanner":
+                handleInitializeBanner(call, result);
+                break;
+            case "disableAutoRequesting":
+                handleDisableAutoRequesting(call, result);
                 break;
             case "requestRewarded":
-                String placementRequest = call.argument("placementId");
-                requestRewarded(placementRequest, result);
+                handleRequestRewarded(call, result);
+                break;
+            case "showRewarded":
+                handleShowRewarded(call, result);
                 break;
             case "isRewardedAvailable":
-                String placementAvailable = call.argument("placementId");
-                isRewardedAvailable(placementAvailable, result);
+                handleIsRewardedAvailable(call, result);
                 break;
-            case "dispose":
-                disposeRewardedAdListener();
-                result.success(null);
+            case "showAdBanner":
+                handleShowAdBanner(call, result);
+                break;
+            case "hideAdBanner":
+                handleHideAdBanner(call, result);
+                break;
+            case "disposeAdBanner":
+                handleDestroyAdBanner(call, result);
+                break;
+            case "disposeRewardAd":
+                handleDisposeRewardedAd(result);
                 break;
             default:
                 result.notImplemented();
@@ -71,179 +79,271 @@ public class DigitalTurbinePlugin implements FlutterPlugin, MethodCallHandler, A
         }
     }
 
-    private void initializeSDK(String appId, Map<String, Object> args, Result result) {
+    /**
+     * Handler Methods
+     */
+    private void handleInitialize(MethodCall call, Result result) {
+        String appId = call.argument("appId");
+        Map<String, Object> args = call.arguments();
+        initialize(appId, args, result);
+    }
+
+    private void handleInitializeRewarded(MethodCall call, Result result) {
+        String placementId = call.argument("placementId");
+        initializeRewarded(placementId, result);
+    }
+
+    private void handleInitializeBanner(MethodCall call, Result result) {
+        String placementId = call.argument("placementId");
+        initializeBanner(placementId, result);
+    }
+
+    private void handleDisableAutoRequesting(MethodCall call, Result result) {
+        String adType = call.argument("adType");
+        String placementId = call.argument("placementId");
+        disableAutoRequesting(adType, placementId, result);
+    }
+
+    private void handleRequestRewarded(MethodCall call, Result result) {
+        String placementId = call.argument("placementId");
+        requestRewarded(placementId, result);
+    }
+
+    private void handleShowRewarded(MethodCall call, Result result) {
+        String placementId = call.argument("placementId");
+        showRewarded(placementId, result);
+    }
+
+    private void handleIsRewardedAvailable(MethodCall call, Result result) {
+        String placementId = call.argument("placementId");
+        isRewardedAvailable(placementId, result);
+    }
+
+    private void handleShowAdBanner(MethodCall call, Result result) {
+        String placementId = call.argument("placementId");
+        showAdBanner(placementId, result);
+    }
+
+    private void handleHideAdBanner(MethodCall call, Result result) {
+        String placementId = call.argument("placementId");
+        hideAdBanner(placementId, result);
+    }
+
+    private void handleDestroyAdBanner(MethodCall call, Result result) {
+        String placementId = call.argument("placementId");
+        destroyAdBanner(placementId, result);
+    }
+
+    private void handleDisposeRewardedAd(Result result) {
+        disposeRewarded(result);
+    }
+
+
+    /**
+     * Common Methods
+     */
+    private void initialize(String appId, Map<String, Object> args, Result result) {
         if (activity == null) {
             result.error("NO_ACTIVITY", "Activity is not available", null);
             return;
         }
 
         try {
-            /// Check if the SDK has already been initialized
             if (FairBid.hasStarted()) {
-                result.success(null);
+                result.success("FairBid SDK has already been initialized");
             } else {
-                /// Initialize the SDK
-
-                // Retrieve settings from args map with default values
-                boolean autoRequestingEnabled = true; // Default to true if not specified or if null
+                boolean autoRequestingEnabled = true;
                 if (args.containsKey("autoRequestingEnabled") && args.get("autoRequestingEnabled") != null) {
                     autoRequestingEnabled = (Boolean) args.get("autoRequestingEnabled");
                 }
 
-                boolean userAsChild = false; // Default to false if not specified or if null
+                boolean userAsChild = false;
                 if (args.containsKey("isChild") && args.get("isChild") != null) {
                     userAsChild = (Boolean) args.get("isChild");
                 }
 
-                // Configure FairBid SDK with the settings
                 FairBid sdk = FairBid.configureForAppId(appId)
-                        .enableLogs();  // Always enable logs, as no condition was specified
+                        .enableLogs();
 
                 if (!autoRequestingEnabled) {
-                    sdk.disableAutoRequesting();  // Disable auto-requesting if specified
+                    sdk.disableAutoRequesting();
                 }
 
                 if (userAsChild) {
-                    sdk.setUserAChild(true);  // Set user as a child if specified
+                    sdk.setUserAChild(true);
                 }
 
-                setRewardedAdListener();  // Set the rewarded ad listener
-
-                // Initialize the SDK with the context of the current activity
                 sdk.start(activity);
-
-                result.success(null);  // Notify success
+                result.success("FairBid SDK initialized successfully");
             }
-
         } catch (Exception e) {
             Log.e(TAG, "Initialization error: " + e.getLocalizedMessage(), e);
             result.error("INITIALIZE_ERROR", e.getLocalizedMessage(), null);
         }
     }
 
-    private void disableAutoRequesting(String appId, Result result) {
-        FairBid.configureForAppId(appId).disableAutoRequesting();
-        result.success("AUTO_REQUESTING_DISABLED");
-
-    }
-
-    ///
-    // Rewarded Ad
-    ///
-    private void showRewarded(String placement, Result result) {
-        if (activity == null) {
-            result.error("NO_ACTIVITY", "Activity is not available", null);
-            return;
-        }
-
-        try {
-            if (Rewarded.isAvailable(placement)) {
-                Rewarded.show(placement, activity);
-                result.success("REWARDED_AD_SHOWING");
-            } else {
-                result.error("REWARDED_NOT_AVAILABLE", "Rewarded ad is not available", null);
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Rewarded ad error: " + e.getLocalizedMessage(), e);
-            result.error("REWARDED_ERROR", e.getLocalizedMessage(), null);
+    private void disableAutoRequesting(String adType, String placementId, Result result) {
+        if ("rewarded".equalsIgnoreCase(adType)) {
+            Rewarded.disableAutoRequesting(placementId);
+            result.success(null);
+        } else {
+            result.error("INVALID_AD_TYPE", "Invalid ad type for disableAutoRequesting", null);
         }
     }
 
-    private void requestRewarded(String placement, Result result) {
-        if (activity == null) {
-            result.error("NO_ACTIVITY", "Activity is not available", null);
-            return;
-        }
+    private void disposeAll() {
+        Banner.setBannerListener(null);
+        Rewarded.setRewardedListener(null);
 
-        try {
-            if (!Rewarded.isAvailable(placement)) {
-                Rewarded.request(placement);
-                result.success("REWARDED_REQUESTED");
-            } else {
-                result.success("REWARDED_ALREADY_AVAILABLE");
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "Rewarded ad error: " + e.getLocalizedMessage(), e);
-            result.error("REWARDED_ERROR", e.getLocalizedMessage(), null);
+    }
+
+
+    /**
+     * Rewarded Ad Methods
+     */
+    private void initializeRewarded(String placementId, Result result) {
+        setRewardedAdListener();
+        Rewarded.request(placementId);
+        result.success("REWARDED_AD_INITIALIZED");
+    }
+
+    private void requestRewarded(String placementId, Result result) {
+        Rewarded.request(placementId);
+        result.success("REWARDED_AD_REQUESTED");
+    }
+
+    private void showRewarded(String placementId, Result result) {
+        if (Rewarded.isAvailable(placementId)) {
+            Rewarded.show(placementId, activity);
+            result.success("REWARDED_AD_SHOWING");
+        } else {
+            result.error("UNAVAILABLE", "Rewarded ad is not available", null);
         }
     }
 
-    private void isRewardedAvailable(String placement, Result result) {
-        if (activity == null) {
-            result.error("NO_ACTIVITY", "Activity is not available", null);
-            return;
-        }
-
-        try {
-            result.success(Rewarded.isAvailable(placement));
-        } catch (Exception e) {
-            Log.e(TAG, "Rewarded ad error: " + e.getLocalizedMessage(), e);
-            result.error("REWARDED_ERROR", e.getLocalizedMessage(), null);
-        }
+    private void isRewardedAvailable(String placementId, Result result) {
+        result.success(Rewarded.isAvailable(placementId));
     }
 
     private void setRewardedAdListener() {
         Rewarded.setRewardedListener(new RewardedListener() {
-
             @Override
-            public void onShow(String placement, ImpressionData impressionData) {
-                channel.invokeMethod("onRewardedShow", createArguments(placement, impressionData));
+            public void onShow(String placementId, ImpressionData impressionData) {
+                channel.invokeMethod("onRewardedShow", createArguments(placementId, impressionData));
             }
 
             @Override
-            public void onShowFailure(String placement, ImpressionData impressionData) {
-                channel.invokeMethod("onRewardedShowFail", createArguments(placement, impressionData));
+            public void onShowFailure(String placementId, ImpressionData impressionData) {
+                channel.invokeMethod("onRewardedShowFail", createArguments(placementId, impressionData));
             }
 
             @Override
-            public void onClick(String placement) {
-                channel.invokeMethod("onRewardedClick", createArguments(placement, null));
+            public void onClick(String placementId) {
+                channel.invokeMethod("onRewardedClick", createArguments(placementId, null));
             }
 
             @Override
-            public void onHide(String placement) {
-                channel.invokeMethod("onRewardedDismiss", createArguments(placement, null));
+            public void onHide(String placementId) {
+                channel.invokeMethod("onRewardedDismiss", createArguments(placementId, null));
             }
 
             @Override
-            public void onAvailable(String placement) {
-                channel.invokeMethod("onRewardedAvailable", createArguments(placement, null));
+            public void onAvailable(String placementId) {
+                channel.invokeMethod("onRewardedAvailable", createArguments(placementId, null));
             }
 
             @Override
-            public void onUnavailable(String placement) {
-                channel.invokeMethod("onRewardedUnavailable", createArguments(placement, null));
+            public void onUnavailable(String placementId) {
+                channel.invokeMethod("onRewardedUnavailable", createArguments(placementId, null));
             }
 
             @Override
-            public void onCompletion(String placement, boolean userRewarded) {
-                Map<String, Object> args = createArguments(placement, null);
+            public void onCompletion(String placementId, boolean userRewarded) {
+                Map<String, Object> args = createArguments(placementId, null);
                 args.put("userRewarded", userRewarded);
                 channel.invokeMethod("onRewardedComplete", args);
             }
 
-
             @Override
-            public void onRequestStart(String s, String s1) {
-                /// Notify the flutter side that the rewarded ad request has started
-
-                Map<String, Object> args = createArguments(s, null);
-                args.put("requestId", s1);
+            public void onRequestStart(String placementId, String requestId) {
+                Map<String, Object> args = createArguments(placementId, null);
+                args.put("requestId", requestId);
                 channel.invokeMethod("onRewardedWillRequest", args);
-
             }
         });
     }
 
-    private void disposeRewardedAdListener() {
-        Log.d(TAG, "Disposing Rewarded Ad Listener");
+    private void disposeRewarded(Result result) {
         Rewarded.setRewardedListener(null);
+        result.success("DISPOSED_REWARDED_AD");
+    }
+
+    /**
+     * Banner Ad Methods
+     */
+    private void initializeBanner(String placementId, Result result) {
+        setAdBannerListener();
+        BannerOptions options = new BannerOptions().withSize(BannerSize.MREC);
+        Banner.show(placementId, options, activity);
+        result.success("BANNER_AD_INITIALIZED");
+    }
+
+    private void showAdBanner(String placementId, Result result) {
+        BannerOptions options = new BannerOptions().withSize(BannerSize.MREC);
+        Banner.show(placementId, options, activity);
+        result.success("SHOWING_BANNER_AD");
+    }
+
+    private void hideAdBanner(String placementId, Result result) {
+        Banner.hide(placementId);
+        result.success("HIDING_BANNER_AD");
+    }
+
+    private void setAdBannerListener() {
+        Banner.setBannerListener(new BannerListener() {
+            @Override
+            public void onError(String placementId, BannerError error) {
+                Map<String, Object> args = new HashMap<>();
+                args.put("placementId", placementId);
+                args.put("error", error.toString());
+                channel.invokeMethod("onBannerError", args);
+            }
+
+            @Override
+            public void onLoad(String placementId) {
+                channel.invokeMethod("onBannerLoad", createArguments(placementId, null));
+            }
+
+            @Override
+            public void onShow(String placementId, ImpressionData impressionData) {
+                channel.invokeMethod("onBannerShow", createArguments(placementId, impressionData));
+            }
+
+            @Override
+            public void onClick(String placementId) {
+                channel.invokeMethod("onBannerClick", createArguments(placementId, null));
+            }
+
+            @Override
+            public void onRequestStart(String placementId, String requestId) {
+                Map<String, Object> args = new HashMap<>();
+                args.put("placementId", placementId);
+                args.put("requestId", requestId);
+                channel.invokeMethod("onBannerRequestStart", args);
+            }
+        });
+    }
+
+    private void destroyAdBanner(String placementId, Result result) {
+        Banner.destroy(placementId);
+        Banner.setBannerListener(null);
+        result.success("DESTROYING_BANNER_AD");
     }
 
 
-    private Map<String, Object> createArguments(String placement, ImpressionData impressionData) {
+    private Map<String, Object> createArguments(String placementId, ImpressionData impressionData) {
         Map<String, Object> args = new HashMap<>();
-        args.put("placementId", placement);
+        args.put("placementId", placementId);
         if (impressionData != null) {
             args.put("impressionData", impressionData.getJsonString());
         }
@@ -251,6 +351,9 @@ public class DigitalTurbinePlugin implements FlutterPlugin, MethodCallHandler, A
     }
 
 
+    /**
+     * Lifecycle methods
+     */
     @Override
     public void onAttachedToActivity(@NonNull ActivityPluginBinding binding) {
         activity = binding.getActivity();
@@ -269,13 +372,12 @@ public class DigitalTurbinePlugin implements FlutterPlugin, MethodCallHandler, A
     @Override
     public void onDetachedFromActivity() {
         activity = null;
-        disposeRewardedAdListener();
+        disposeAll();
     }
 
     @Override
     public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
-        disposeRewardedAdListener();
+        disposeAll();
         channel.setMethodCallHandler(null);
-
     }
 }

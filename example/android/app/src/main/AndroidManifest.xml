@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.gaya.digital_turbine_plugin_example">
+    package="com.girlz.app">
 
     <application
         android:name="${applicationName}"
