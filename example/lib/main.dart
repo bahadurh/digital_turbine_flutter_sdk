@@ -2,7 +2,6 @@ import 'package:digital_turbine_plugin/digital_turbine_plugin.dart';
 import 'package:digital_turbine_plugin_example/adaptive_ad_banner.dart';
 import 'package:digital_turbine_plugin_example/rewarded_ad.dart';
 import 'package:flutter/material.dart';
-import 'banner_platform_view.dart';
 import 'constants.dart';
 
 ///

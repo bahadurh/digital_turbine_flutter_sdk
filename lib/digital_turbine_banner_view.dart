@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 
+/// A widget that displays a banner ad from Digital Turbine.
+/// You can use this widget to display banner ads in your app inside a [Column] or [Row or any other widget.
 class DigitalTurbineBannerView extends StatefulWidget {
   final String placementId;
   final double width;
@@ -50,9 +52,9 @@ class _DigitalTurbineBannerViewState extends State<DigitalTurbineBannerView> {
     // For Android, you would use AndroidView here
     else if (defaultTargetPlatform == TargetPlatform.android) {
       return Container(
-          color: Colors.red,
-          width: widget.width,
-          height: widget.height,
+        color: Colors.red,
+        width: widget.width,
+        height: widget.height,
         child: AndroidView(
           viewType: 'digital_turbine_banner_view',
           creationParams: {'placementId': widget.placementId},
@@ -86,7 +88,7 @@ class _DigitalTurbineBannerViewState extends State<DigitalTurbineBannerView> {
 
   @override
   void dispose() {
-    _disposeAd();
+    // _disposeAd();
     super.dispose();
   }
 

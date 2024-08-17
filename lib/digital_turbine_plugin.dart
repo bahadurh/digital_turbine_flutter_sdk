@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'dart:io';
-
 import 'package:flutter/services.dart';
+
+export 'digital_turbine_banner_view.dart';
 
 class DigitalTurbinePlugin {
   static const MethodChannel _channel = MethodChannel('digital_turbine_plugin');
@@ -34,7 +34,6 @@ class DigitalTurbinePlugin {
       'placementId': placementId,
     });
   }
-
 
   ///
   /// Rewarded Ad Methods
@@ -85,7 +84,6 @@ class DigitalTurbinePlugin {
   static Future<void> disposeRewardedAd() async {
     await _channel.invokeMethod('disposeRewardAd');
   }
-
 
   ///
   /// Banner Ad Methods
@@ -138,19 +136,30 @@ enum AdType {
 
 abstract class DigitalTurbineRewardedListener {
   void onRewardedAvailable(String placementId);
+
   void onRewardedUnavailable(String placementId);
+
   void onRewardedShow(String placementId, String impressionData);
+
   void onRewardedShowFail(String placementId, String error, String impressionData);
+
   void onRewardedClick(String placementId);
+
   void onRewardedComplete(String placementId, bool userRewarded);
+
   void onRewardedDismiss(String placementId);
+
   void onRewardedWillRequest(String placementId, String requestId);
 }
 
 abstract class DigitalTurbineAdBannerListener {
   void onAdBannerLoaded(String placementId, String impressionData);
+
   void onAdBannerError(String placementId, String error);
+
   void onAdBannerShow(String placementId, String impressionData);
+
   void onAdBannerClick(String placementId);
+
   void onAdBannerRequestStart(String placementId, String requestId);
 }
