@@ -25,6 +25,7 @@ public class BannerView implements PlatformView, MethodChannel.MethodCallHandler
     private String placementId;
     private MethodChannel methodChannel;
     private Activity activity;
+    private boolean isAdLoaded = false;
 
     BannerView(Context context, Activity activity, int id, Map<String, Object> creationParams, BinaryMessenger messenger) {
         this.activity = activity;
@@ -33,7 +34,6 @@ public class BannerView implements PlatformView, MethodChannel.MethodCallHandler
         this.methodChannel = new MethodChannel(messenger, "digital_turbine_banner_view_" + id);
         this.methodChannel.setMethodCallHandler(this);
         setupBannerListener();
-        loadAd();
     }
 
     @Override
@@ -44,7 +44,7 @@ public class BannerView implements PlatformView, MethodChannel.MethodCallHandler
     @Override
     public void dispose() {
         methodChannel.setMethodCallHandler(null);
-        Banner.destroy(placementId);
+        disposeAd();
     }
 
     @Override
@@ -55,8 +55,8 @@ public class BannerView implements PlatformView, MethodChannel.MethodCallHandler
                 result.success(null);
                 break;
             case "disposeAd":
-                Banner.destroy(placementId);
-                result.success(null);
+                disposeAd();
+                result.success("BANNER_DISPOSED");
                 break;
             default:
                 result.notImplemented();
@@ -72,11 +72,13 @@ public class BannerView implements PlatformView, MethodChannel.MethodCallHandler
                 args.put("placementId", placementId);
                 args.put("error", error.toString());
                 methodChannel.invokeMethod("onBannerError", args);
+                isAdLoaded = false;
             }
 
             @Override
             public void onLoad(String placementId) {
                 methodChannel.invokeMethod("onBannerLoad", createArguments(placementId, null));
+                isAdLoaded = true;
             }
 
             @Override
@@ -100,15 +102,27 @@ public class BannerView implements PlatformView, MethodChannel.MethodCallHandler
     }
 
     private void loadAd() {
-        if (activity != null) {
+        if (activity != null && !isAdLoaded) {
             BannerOptions options = new BannerOptions()
-                    .withSize(BannerSize.MREC).placeInContainer(containerView);
+                    .withSize(BannerSize.MREC)
+                    .placeInContainer(containerView);
 
             activity.runOnUiThread(() -> {
                 Banner.show(placementId, options, activity);
             });
+        } else if (isAdLoaded) {
+            System.out.println("Ad already loaded, skipping load request");
         } else {
             System.err.println("Activity is null, cannot load banner ad");
+        }
+    }
+
+    private void disposeAd() {
+        if (isAdLoaded) {
+            Banner.destroy(placementId);
+            Banner.setBannerListener(null);
+            containerView.removeAllViews();
+            isAdLoaded = false;
         }
     }
 

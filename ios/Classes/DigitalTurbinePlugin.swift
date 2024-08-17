@@ -238,7 +238,7 @@ extension DigitalTurbinePlugin {
 
 extension DigitalTurbinePlugin {
     private func showAdBanner(placementId: String, result: @escaping FlutterResult) {
-        let options = FYBBannerOptions(placementId: placementId, size: .MREC) 
+        let options = FYBBannerOptions(placementId: placementId, size: .MREC)
         
         if let rootViewController = UIApplication.shared.keyWindow?.rootViewController {
             FYBBanner.show(in: rootViewController.view, options: options)
@@ -344,15 +344,12 @@ extension DigitalTurbinePlugin: FYBBannerDelegate {
 }
 
 
-
-
-
-
-
-class BannerView: NSObject, FlutterPlatformView {
-    private var _view: UIView
-    private var placementId: String
-    private var channel: FlutterMethodChannel
+// MARK: -  Banner View
+class BannerView: NSObject, FlutterPlatformView, FYBBannerDelegate {
+    private let containerView: UIView
+    private let placementId: String
+    private let channel: FlutterMethodChannel
+    private var bannerView: FYBBannerAdView?
     
     init(
         frame: CGRect,
@@ -360,48 +357,91 @@ class BannerView: NSObject, FlutterPlatformView {
         arguments args: Any?,
         binaryMessenger messenger: FlutterBinaryMessenger
     ) {
-        _view = UIView(frame: frame)
-        placementId = (args as? [String: Any])?["placementId"] as? String ?? ""
-        channel = FlutterMethodChannel(name: "digital_turbine_banner_view_\(viewId)", binaryMessenger: messenger)
+        self.containerView = UIView(frame: frame)
+        self.placementId = (args as? [String: Any])?["placementId"] as? String ?? ""
+        self.channel = FlutterMethodChannel(name: "digital_turbine_banner_view_\(viewId)", binaryMessenger: messenger)
         
         super.init()
         
-        channel.setMethodCallHandler { [weak self] (call, result) in
-            self?.handle(call, result: result)
+        self.channel.setMethodCallHandler { [weak self] (call: FlutterMethodCall, result: @escaping FlutterResult) in
+            switch call.method {
+            case "loadAd":
+                self?.loadAd()
+                result(nil)
+            case "disposeAd":
+                self?.disposeAd()
+                result(nil)
+            default:
+                result(FlutterMethodNotImplemented)
+            }
         }
+        
+        FYBBanner.delegate = self
     }
     
     func view() -> UIView {
-        return _view
+        return containerView
     }
     
-    func createNativeView() {
+    private func loadAd() {
         let options = FYBBannerOptions(placementId: placementId, size: .MREC)
-        FYBBanner.show(in: _view, options: options)
+        FYBBanner.show(in: containerView, options: options)
     }
     
-    func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-        switch call.method {
-        case "loadAd":
-            createNativeView()
-            result(nil)
-        case "disposeAd":
-            FYBBanner.destroy(placementId)
-            result(nil)
-        default:
-            result(FlutterMethodNotImplemented)
-        }
+    private func disposeAd() {
+        bannerView?.removeFromSuperview()
+        bannerView = nil
+        FYBBanner.destroy(placementId)
+        FYBBanner.delegate = nil
+    }
+    
+    // MARK: - FYBBannerDelegate methods
+    
+    func bannerDidLoad(_ banner: FYBBannerAdView, impressionData: FYBImpressionData) {
+        bannerView = banner
+        let args: [String: Any] = [
+            "placementId": banner.options.placementId,
+            "impressionData": impressionData.jsonString ?? ""
+        ]
+        channel.invokeMethod("onBannerLoad", arguments: args)
+    }
+    
+    func bannerDidFail(toLoad placementId: String, withError error: Error) {
+        let args: [String: Any] = [
+            "placementId": placementId,
+            "error": error.localizedDescription
+        ]
+        channel.invokeMethod("onBannerError", arguments: args)
+    }
+    
+    func bannerDidShow(_ banner: FYBBannerAdView, impressionData: FYBImpressionData) {
+        let args: [String: Any] = [
+            "placementId": banner.options.placementId,
+            "impressionData": impressionData.jsonString ?? ""
+        ]
+        channel.invokeMethod("onBannerShow", arguments: args)
+    }
+    
+    func bannerDidClick(_ banner: FYBBannerAdView) {
+        let args: [String: Any] = ["placementId": banner.options.placementId]
+        channel.invokeMethod("onBannerClick", arguments: args)
+    }
+    
+    deinit {
+        disposeAd()
     }
 }
 
+// MARK: - Banner View Factory
+
 class BannerViewFactory: NSObject, FlutterPlatformViewFactory {
-    private var messenger: FlutterBinaryMessenger
-    
+    private let messenger: FlutterBinaryMessenger
+
     init(messenger: FlutterBinaryMessenger) {
         self.messenger = messenger
         super.init()
     }
-    
+
     func create(
         withFrame frame: CGRect,
         viewIdentifier viewId: Int64,
@@ -414,9 +454,8 @@ class BannerViewFactory: NSObject, FlutterPlatformViewFactory {
             binaryMessenger: messenger
         )
     }
-    
+
     public func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
         return FlutterStandardMessageCodec.sharedInstance()
     }
 }
-
