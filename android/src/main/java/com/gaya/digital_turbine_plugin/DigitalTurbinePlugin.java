@@ -17,7 +17,7 @@ import com.fyber.fairbid.ads.rewarded.RewardedListener;
 
 import java.util.HashMap;
 import java.util.Map;
-
+import android.app.Activity;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
@@ -25,15 +25,21 @@ import io.flutter.plugin.common.MethodCall;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
+import io.flutter.plugin.common.BinaryMessenger;
+import io.flutter.plugin.platform.PlatformViewRegistry;
 
 public class DigitalTurbinePlugin implements FlutterPlugin, MethodCallHandler, ActivityAware {
     private MethodChannel channel;
     private Activity activity;
     private static final String TAG = "DigitalTurbinePlugin";
+    private BinaryMessenger binaryMessenger;
+    private PlatformViewRegistry viewRegistry;
 
     @Override
-    public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
-        channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "digital_turbine_plugin");
+    public void onAttachedToEngine(FlutterPlugin.FlutterPluginBinding flutterPluginBinding) {
+        binaryMessenger = flutterPluginBinding.getBinaryMessenger();
+        viewRegistry = flutterPluginBinding.getPlatformViewRegistry();
+        channel = new MethodChannel(binaryMessenger, "digital_turbine_plugin");
         channel.setMethodCallHandler(this);
     }
 
@@ -355,10 +361,16 @@ public class DigitalTurbinePlugin implements FlutterPlugin, MethodCallHandler, A
      * Lifecycle methods
      */
     @Override
-    public void onAttachedToActivity(@NonNull ActivityPluginBinding binding) {
-        activity = binding.getActivity();
+    public void onAttachedToActivity(ActivityPluginBinding binding) {
+        this.activity = binding.getActivity();
+        // Register the banner view factory
+        if (viewRegistry != null && binaryMessenger != null) {
+            viewRegistry.registerViewFactory(
+                    "digital_turbine_banner_view",
+                    new BannerViewFactory(binaryMessenger, activity)
+            );
+        }
     }
-
     @Override
     public void onDetachedFromActivityForConfigChanges() {
         activity = null;
@@ -376,8 +388,9 @@ public class DigitalTurbinePlugin implements FlutterPlugin, MethodCallHandler, A
     }
 
     @Override
-    public void onDetachedFromEngine(@NonNull FlutterPluginBinding binding) {
-        disposeAll();
+    public void onDetachedFromEngine(FlutterPlugin.FlutterPluginBinding binding) {
         channel.setMethodCallHandler(null);
+        binaryMessenger = null;
+        viewRegistry = null;
     }
 }

@@ -2,6 +2,7 @@ import 'package:digital_turbine_plugin/digital_turbine_plugin.dart';
 import 'package:digital_turbine_plugin_example/adaptive_ad_banner.dart';
 import 'package:digital_turbine_plugin_example/rewarded_ad.dart';
 import 'package:flutter/material.dart';
+import 'banner_platform_view.dart';
 import 'constants.dart';
 
 ///
@@ -78,6 +79,36 @@ class _MyHomePageState extends State<MyHomePage> {
     ));
   }
 
+  void _showBannerAdPlatformView() {
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (context) => Scaffold(
+        appBar: AppBar(title: const Text('Banner Ad PlatformView')),
+        body: PageView.builder(
+          itemCount: 3,
+          itemBuilder: (context, index) {
+            if(index == 0)
+            return Center(
+              child: DigitalTurbineBannerView(placementId: bannerAdPlacementId),
+            );
+            else if(index == 1)
+              return Container(
+                color: Colors.red,
+                child: Center(
+                  child: Text('Page 2'),
+                ),
+              );
+            else
+              return Container(
+                color: Colors.blue,
+                child: Center(
+                  child: Text('Page 3'),
+                ),
+              );
+          },
+      ),
+    )));
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -106,6 +137,11 @@ class _MyHomePageState extends State<MyHomePage> {
             ElevatedButton(
               onPressed: _isSDKInitialized ? _showBannerAd : null,
               child: const Text('Banner Ad'),
+            ),
+
+            ElevatedButton(
+              onPressed: _isSDKInitialized ? _showBannerAdPlatformView : null,
+              child: const Text('Banner Ad PlatformView'),
             ),
           ],
         ),

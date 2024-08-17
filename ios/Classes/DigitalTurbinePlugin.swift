@@ -11,6 +11,10 @@ public class DigitalTurbinePlugin: NSObject, FlutterPlugin {
         let instance = DigitalTurbinePlugin()
         instance.channel = channel
         registrar.addMethodCallDelegate(instance, channel: channel)
+        
+        // Register the banner view
+        let factory = BannerViewFactory(messenger: registrar.messenger())
+        registrar.register(factory, withId: "digital_turbine_banner_view")
     }
     
     
@@ -338,3 +342,81 @@ extension DigitalTurbinePlugin: FYBBannerDelegate {
         channel?.invokeMethod("onBannerRequestStart", arguments: args)
     }
 }
+
+
+
+
+
+
+
+class BannerView: NSObject, FlutterPlatformView {
+    private var _view: UIView
+    private var placementId: String
+    private var channel: FlutterMethodChannel
+    
+    init(
+        frame: CGRect,
+        viewIdentifier viewId: Int64,
+        arguments args: Any?,
+        binaryMessenger messenger: FlutterBinaryMessenger
+    ) {
+        _view = UIView(frame: frame)
+        placementId = (args as? [String: Any])?["placementId"] as? String ?? ""
+        channel = FlutterMethodChannel(name: "digital_turbine_banner_view_\(viewId)", binaryMessenger: messenger)
+        
+        super.init()
+        
+        channel.setMethodCallHandler { [weak self] (call, result) in
+            self?.handle(call, result: result)
+        }
+    }
+    
+    func view() -> UIView {
+        return _view
+    }
+    
+    func createNativeView() {
+        let options = FYBBannerOptions(placementId: placementId, size: .MREC)
+        FYBBanner.show(in: _view, options: options)
+    }
+    
+    func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        switch call.method {
+        case "loadAd":
+            createNativeView()
+            result(nil)
+        case "disposeAd":
+            FYBBanner.destroy(placementId)
+            result(nil)
+        default:
+            result(FlutterMethodNotImplemented)
+        }
+    }
+}
+
+class BannerViewFactory: NSObject, FlutterPlatformViewFactory {
+    private var messenger: FlutterBinaryMessenger
+    
+    init(messenger: FlutterBinaryMessenger) {
+        self.messenger = messenger
+        super.init()
+    }
+    
+    func create(
+        withFrame frame: CGRect,
+        viewIdentifier viewId: Int64,
+        arguments args: Any?
+    ) -> FlutterPlatformView {
+        return BannerView(
+            frame: frame,
+            viewIdentifier: viewId,
+            arguments: args,
+            binaryMessenger: messenger
+        )
+    }
+    
+    public func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
+        return FlutterStandardMessageCodec.sharedInstance()
+    }
+}
+
