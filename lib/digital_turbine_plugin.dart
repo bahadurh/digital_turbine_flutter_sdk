@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/services.dart';
 
 export 'digital_turbine_banner_view.dart';
@@ -33,6 +34,10 @@ class DigitalTurbinePlugin {
       'adType': adType.toString().split('.').last,
       'placementId': placementId,
     });
+  }
+
+  static Future<void> showTestSuite() async {
+    await _channel.invokeMethod("testSuite");
   }
 
   ///
@@ -98,6 +103,9 @@ class DigitalTurbinePlugin {
 
   static Future<void> disposeAdBanner(String placementId) async {
     await _channel.invokeMethod('disposeAdBanner', {'placementId': placementId});
+  }
+  static Future<void> requestAdBanner(String placementId) async {
+    await _channel.invokeMethod('requestAdBanner', {'placementId': placementId});
   }
 
   static void setAdBannerListener(DigitalTurbineAdBannerListener listener) {

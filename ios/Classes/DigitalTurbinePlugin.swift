@@ -39,6 +39,8 @@ public class DigitalTurbinePlugin: NSObject, FlutterPlugin {
             handleIsRewardedAvailable(call, result: result)
         case "showAdBanner":
             handleShowAdBanner(call, result: result)
+        case "requestAdBanner" :
+            handleRequestAdBanner(call, result: result)
         case "hideAdBanner":
             handleHideAdBanner(call, result: result)
         case "disposeAdBanner":
@@ -121,6 +123,15 @@ public class DigitalTurbinePlugin: NSObject, FlutterPlugin {
             return
         }
         showAdBanner(placementId: placementId, result: result)
+    }
+    
+    private func handleRequestAdBanner(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let args = call.arguments as? [String: Any],
+              let placementId = args["placementId"] as? String else {
+            result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for showAdBanner", details: nil))
+            return
+        }
+        requestAdBanner(placementId: placementId, result: result)
     }
     
     private func handleHideAdBanner(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -248,6 +259,14 @@ extension DigitalTurbinePlugin {
         }
     }
     
+    private func requestAdBanner(placementId: String, result: @escaping FlutterResult) {
+        let options = FYBBannerOptions(placementId: placementId, size: .MREC)
+        FYBBanner.request(with: options)
+        
+    }
+    
+    
+    
     private func hideAdBanner(placementId: String, result: @escaping FlutterResult) {
         FYBBanner.hide(placementId)
         result("\(placementId) : Ad Banner has been hidden")
@@ -359,7 +378,7 @@ class BannerView: NSObject, FlutterPlatformView, FYBBannerDelegate {
     ) {
         self.containerView = UIView(frame: frame)
         self.placementId = (args as? [String: Any])?["placementId"] as? String ?? ""
-        self.channel = FlutterMethodChannel(name: "digital_turbine_banner_view_\(viewId)", binaryMessenger: messenger)
+        self.channel = FlutterMethodChannel(name: "digital_turbine_banner_view_1", binaryMessenger: messenger)
         
         super.init()
         
@@ -375,8 +394,6 @@ class BannerView: NSObject, FlutterPlatformView, FYBBannerDelegate {
                 result(FlutterMethodNotImplemented)
             }
         }
-        
-        FYBBanner.delegate = self
     }
     
     func view() -> UIView {
@@ -386,45 +403,13 @@ class BannerView: NSObject, FlutterPlatformView, FYBBannerDelegate {
     private func loadAd() {
         let options = FYBBannerOptions(placementId: placementId, size: .MREC)
         FYBBanner.show(in: containerView, options: options)
+        
     }
     
     private func disposeAd() {
         bannerView?.removeFromSuperview()
         bannerView = nil
         FYBBanner.destroy(placementId)
-        FYBBanner.delegate = nil
-    }
-    
-    // MARK: - FYBBannerDelegate methods
-    
-    func bannerDidLoad(_ banner: FYBBannerAdView, impressionData: FYBImpressionData) {
-        bannerView = banner
-        let args: [String: Any] = [
-            "placementId": banner.options.placementId,
-            "impressionData": impressionData.jsonString ?? ""
-        ]
-        channel.invokeMethod("onBannerLoad", arguments: args)
-    }
-    
-    func bannerDidFail(toLoad placementId: String, withError error: Error) {
-        let args: [String: Any] = [
-            "placementId": placementId,
-            "error": error.localizedDescription
-        ]
-        channel.invokeMethod("onBannerError", arguments: args)
-    }
-    
-    func bannerDidShow(_ banner: FYBBannerAdView, impressionData: FYBImpressionData) {
-        let args: [String: Any] = [
-            "placementId": banner.options.placementId,
-            "impressionData": impressionData.jsonString ?? ""
-        ]
-        channel.invokeMethod("onBannerShow", arguments: args)
-    }
-    
-    func bannerDidClick(_ banner: FYBBannerAdView) {
-        let args: [String: Any] = ["placementId": banner.options.placementId]
-        channel.invokeMethod("onBannerClick", arguments: args)
     }
     
     deinit {

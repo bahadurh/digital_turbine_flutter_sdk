@@ -17,6 +17,7 @@ dependencies:
   flutter:
     sdk: flutter
 
+  google_mobile_ads: ^5.1.0
   digital_turbine_plugin:
     # When depending on this package from a real application you should use:
     #   digital_turbine_plugin: ^x.y.z

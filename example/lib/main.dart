@@ -1,7 +1,9 @@
 import 'package:digital_turbine_plugin/digital_turbine_plugin.dart';
 import 'package:digital_turbine_plugin_example/adaptive_ad_banner.dart';
+import 'package:digital_turbine_plugin_example/pages/banner_2_page.dart';
 import 'package:digital_turbine_plugin_example/rewarded_ad.dart';
 import 'package:flutter/material.dart';
+
 import 'constants.dart';
 
 ///
@@ -42,6 +44,9 @@ class _MyHomePageState extends State<MyHomePage> {
   String _status = 'Not initialized';
   bool _isSDKInitialized = false;
 
+  /// Initialize the SDK with the provided appId.
+  ///
+  /// This method should be called before showing any ads.
   Future<void> _initializeSDK() async {
     try {
       await DigitalTurbinePlugin.initialize(appId: appId, logLevel: LogLevel.verbose);
@@ -56,6 +61,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
+  /// This method demonstrates how to show a rewarded ad.
   void _showRewardedAd() {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => Scaffold(
@@ -67,6 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
     ));
   }
 
+  /// This method demonstrates how to show a banner ad.
   void _showBannerAd() {
     Navigator.of(context).push(MaterialPageRoute(
       builder: (context) => Scaffold(
@@ -78,42 +85,60 @@ class _MyHomePageState extends State<MyHomePage> {
     ));
   }
 
+  /// This method demonstrates how to show a banner ad using a platform view in a PageView.
   void _showBannerAdPlatformView() {
-    Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => Scaffold(
-        appBar: AppBar(title: const Text('Banner Ad PlatformView')),
-        body: PageView.builder(
-          itemCount: 3,
-          itemBuilder: (context, index) {
-            if(index == 0)
-            return Center(
-              child: DigitalTurbineBannerView(placementId: bannerAdPlacementId),
-            );
-            else if(index == 1)
-              return Container(
-                color: Colors.red,
-                child: Center(
-                  child: Text('Page 2'),
-                ),
-              );
-            else
-              return Container(
-                color: Colors.blue,
-                child: Center(
-                  child: Text('Page 3'),
-                ),
-              );
-          },
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => Scaffold(
+          appBar: AppBar(title: const Text('Banner Ad PlatformView')),
+          body: PageView.builder(
+            itemCount: 3,
+            itemBuilder: (context, index) {
+              switch (index) {
+                case 0:
+                  Center(
+                    child: DigitalTurbineBannerView(placementId: bannerAdPlacementId),
+                  );
+                case 1:
+                  Container(
+                    color: Colors.red,
+                    child: const Center(
+                      child: Text('Page 2'),
+                    ),
+                  );
+
+                case 2:
+                  Container(
+                    color: Colors.blue,
+                    child: const Center(
+                      child: Text('Page 3'),
+                    ),
+                  );
+              }
+              return const SizedBox();
+            },
+          ),
+        ),
       ),
-    )));
+    );
+  }
+
+  void _showBannerAdPlatformView2() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => Banner2Page(placementId: bannerAdPlacementId),
+      ),
+    );
+  }
+
+  void _showTestSuite() {
+    DigitalTurbinePlugin.showTestSuite();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
+      appBar: AppBar(title: Text(widget.title)),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -137,10 +162,18 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: _isSDKInitialized ? _showBannerAd : null,
               child: const Text('Banner Ad'),
             ),
-
             ElevatedButton(
               onPressed: _isSDKInitialized ? _showBannerAdPlatformView : null,
               child: const Text('Banner Ad PlatformView'),
+            ),
+            ElevatedButton(
+              onPressed: _isSDKInitialized ? _showBannerAdPlatformView2 : null,
+              child: const Text('Banner Ad PlatformView 2'),
+            ),
+
+            ElevatedButton(
+              onPressed: _isSDKInitialized ? _showTestSuite : null,
+              child: const Text('Show Test Suite'),
             ),
           ],
         ),

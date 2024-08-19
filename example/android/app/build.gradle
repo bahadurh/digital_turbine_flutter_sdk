@@ -44,7 +44,7 @@ android {
 
     defaultConfig {
         applicationId "com.girlz.app"
-        minSdkVersion flutter.minSdkVersion
+        minSdkVersion 28
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
