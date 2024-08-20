@@ -1,4 +1,3 @@
-
 import 'package:digital_turbine_plugin/digital_turbine_plugin.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
@@ -54,26 +53,15 @@ class _DigitalTurbineBannerViewWithControllerState extends State<DigitalTurbineB
         onPlatformViewCreated: _onPlatformViewCreated,
       );
     } else {
-      platformView = Text('Banner ads not supported on this platform');
+      platformView = kDebugMode
+          ? Text(
+              '$defaultTargetPlatform is not yet supported by the digital_turbine_banner_view plugin',
+              style: const TextStyle(color: Colors.red),
+            )
+          : const SizedBox.shrink();
     }
 
-    return Container(
-      width: widget.controller.size.width,
-      height: widget.controller.size.height,
-      color: Colors.transparent,
-      child: Stack(
-        children: [
-          platformView,
-          if (!widget.controller.isAdLoaded)
-            Container(
-              color: Colors.grey[300],
-              child: Center(child: CircularProgressIndicator()),
-            )
-          else
-            Text('Ad loaded')
-        ],
-      ),
-    );
+    return SizedBox(width: widget.controller.size.width, height: widget.controller.size.height, child: platformView);
   }
 
   @override
