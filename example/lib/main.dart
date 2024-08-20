@@ -3,6 +3,7 @@ import 'package:digital_turbine_plugin_example/adaptive_ad_banner.dart';
 import 'package:digital_turbine_plugin_example/pages/banner_2_page.dart';
 import 'package:digital_turbine_plugin_example/rewarded_ad.dart';
 import 'package:flutter/material.dart';
+
 import 'constants.dart';
 
 ///
@@ -81,39 +82,43 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _showBannerAdPlatformView() {
     Navigator.of(context).push(MaterialPageRoute(
-      builder: (context) => Scaffold(
-        appBar: AppBar(title: const Text('Banner Ad PlatformView')),
-        body: PageView.builder(
-          itemCount: 3,
-          itemBuilder: (context, index) {
-            if(index == 0)
-            return Center(
-              child: DigitalTurbineBannerView(placementId: bannerAdPlacementId),
-            );
-            else if(index == 1)
-              return Container(
-                color: Colors.red,
-                child: Center(
-                  child: Text('Page 2'),
-                ),
-              );
-            else
-              return Container(
-                color: Colors.blue,
-                child: Center(
-                  child: Text('Page 3'),
-                ),
-              );
-          },
-      ),
-    )));
+        builder: (context) => Scaffold(
+              appBar: AppBar(title: const Text('Banner Ad PlatformView')),
+              body: PageView.builder(
+                itemCount: 3,
+                itemBuilder: (context, index) {
+                  if (index == 0)
+                    return Center(
+                      child: DigitalTurbineBannerView(placementId: bannerAdPlacementId),
+                    );
+                  else if (index == 1)
+                    return Container(
+                      color: Colors.red,
+                      child: Center(
+                        child: Text('Page 2'),
+                      ),
+                    );
+                  else
+                    return Container(
+                      color: Colors.blue,
+                      child: Center(
+                        child: Text('Page 3'),
+                      ),
+                    );
+                },
+              ),
+            )));
   }
+
   void _showBannerAdPlatformView2() {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => Banner2Page(placementId: bannerAdPlacementId),
       ),
     );
+  }
+  void _showTestSuite() {
+    DigitalTurbinePlugin.showTestSuite();
   }
 
   @override
@@ -145,13 +150,17 @@ class _MyHomePageState extends State<MyHomePage> {
               onPressed: _isSDKInitialized ? _showBannerAd : null,
               child: const Text('Banner Ad'),
             ),
-
             ElevatedButton(
               onPressed: _isSDKInitialized ? _showBannerAdPlatformView : null,
               child: const Text('Banner Ad PlatformView'),
-            ),  ElevatedButton(
+            ),
+            ElevatedButton(
               onPressed: _isSDKInitialized ? _showBannerAdPlatformView2 : null,
               child: const Text('Banner Ad PlatformView 2'),
+            ),
+            ElevatedButton(
+              onPressed: _showTestSuite,
+              child: const Text('showTestSuite'),
             ),
           ],
         ),

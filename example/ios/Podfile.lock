@@ -2,8 +2,12 @@ PODS:
   - digital_turbine_plugin (0.0.1):
     - FairBidSDK (~> 3.53.0)
     - Flutter
+    - Google-Mobile-Ads-SDK (~> 11.7.0)
   - FairBidSDK (3.53.0)
   - Flutter (1.0.0)
+  - Google-Mobile-Ads-SDK (11.7.0):
+    - GoogleUserMessagingPlatform (>= 1.1)
+  - GoogleUserMessagingPlatform (2.5.0)
   - integration_test (0.0.1):
     - Flutter
 
@@ -15,6 +19,8 @@ DEPENDENCIES:
 SPEC REPOS:
   trunk:
     - FairBidSDK
+    - Google-Mobile-Ads-SDK
+    - GoogleUserMessagingPlatform
 
 EXTERNAL SOURCES:
   digital_turbine_plugin:
@@ -25,11 +31,13 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/integration_test/ios"
 
 SPEC CHECKSUMS:
-  digital_turbine_plugin: 5f98475fbcbe98d9aab4b624ec8fc3e331f9584e
+  digital_turbine_plugin: e5343e2ce2395570173ee7a80b7a7acfe72a18fd
   FairBidSDK: 698612b8007e9e4ee30047ef9e306996909d5cb6
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  Google-Mobile-Ads-SDK: 204b517c9765169144cf39763c7f5d23c57a9db0
+  GoogleUserMessagingPlatform: 6b4f48a370e77ce121d034c908cc6ee4fdafaf13
   integration_test: 13825b8a9334a850581300559b8839134b124670
 
-PODFILE CHECKSUM: 819463e6a0290f5a72f145ba7cde16e8b6ef0796
+PODFILE CHECKSUM: 53333a54703163d1643f7327677caaa64a75f525
 
 COCOAPODS: 1.14.3

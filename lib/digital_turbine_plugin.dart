@@ -20,6 +20,10 @@ class DigitalTurbinePlugin {
     });
   }
 
+  static Future<void> showTestSuite() async {
+    await _channel.invokeMethod('showTestSuite');
+  }
+
   static Future<void> initializeRewarded(String placementId) async {
     await _channel.invokeMethod('initializeRewarded', {'placementId': placementId});
   }

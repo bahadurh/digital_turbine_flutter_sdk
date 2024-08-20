@@ -1,6 +1,7 @@
 import Flutter
 import UIKit
 import FairBidSDK
+import GoogleMobileAds
 
 public class DigitalTurbinePlugin: NSObject, FlutterPlugin {
     static var channel: FlutterMethodChannel?
@@ -48,6 +49,9 @@ public class DigitalTurbinePlugin: NSObject, FlutterPlugin {
             handleDestroyAdBanner(call, result: result)
         case "disposeRewardAd" :
             disposeRewarded(result: result)
+        case "showTestSuite":
+            FairBid.presentTestSuite()
+            result("TestSuiteShown")
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -177,7 +181,10 @@ public class DigitalTurbinePlugin: NSObject, FlutterPlugin {
             options.isChild = isChild
         }
         
-        FairBid.start(withAppId: appId, options: options)
+        GADMobileAds.sharedInstance().start { status in
+            FairBid.start(withAppId: appId, options: options)
+        }
+        
         result(nil)
     }
     
@@ -407,7 +414,7 @@ class BannerView: NSObject, FlutterPlatformView, FYBBannerDelegate {
     
     private func loadAd() {
         let options = FYBBannerOptions(placementId: placementId, size: .MREC)
-         if ((bannerView ?? DigitalTurbinePlugin.bannerView ) != nil ){
+        if ((bannerView ?? DigitalTurbinePlugin.bannerView ) != nil ){
             containerView.addSubview((bannerView ?? DigitalTurbinePlugin.bannerView)!)
         } else {
             print("Banner VIEW is EMPTY")
