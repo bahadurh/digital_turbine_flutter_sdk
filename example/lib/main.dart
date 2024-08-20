@@ -1,5 +1,6 @@
 import 'package:digital_turbine_plugin/digital_turbine_plugin.dart';
 import 'package:digital_turbine_plugin_example/adaptive_ad_banner.dart';
+import 'package:digital_turbine_plugin_example/pages/banner_2_page.dart';
 import 'package:digital_turbine_plugin_example/rewarded_ad.dart';
 import 'package:flutter/material.dart';
 import 'constants.dart';
@@ -107,6 +108,13 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     )));
   }
+  void _showBannerAdPlatformView2() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => Banner2Page(placementId: bannerAdPlacementId),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -141,6 +149,9 @@ class _MyHomePageState extends State<MyHomePage> {
             ElevatedButton(
               onPressed: _isSDKInitialized ? _showBannerAdPlatformView : null,
               child: const Text('Banner Ad PlatformView'),
+            ),  ElevatedButton(
+              onPressed: _isSDKInitialized ? _showBannerAdPlatformView2 : null,
+              child: const Text('Banner Ad PlatformView 2'),
             ),
           ],
         ),

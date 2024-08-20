@@ -3,13 +3,14 @@ import UIKit
 import FairBidSDK
 
 public class DigitalTurbinePlugin: NSObject, FlutterPlugin {
-    private var channel: FlutterMethodChannel?
+    static var channel: FlutterMethodChannel?
+    static var bannerView: FYBBannerAdView?
     private weak var bannerContainerView: UIView?
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "digital_turbine_plugin", binaryMessenger: registrar.messenger())
         let instance = DigitalTurbinePlugin()
-        instance.channel = channel
+        DigitalTurbinePlugin.channel = channel
         registrar.addMethodCallDelegate(instance, channel: channel)
         
         // Register the banner view
@@ -37,6 +38,8 @@ public class DigitalTurbinePlugin: NSObject, FlutterPlugin {
             handleShowRewarded(call, result: result)
         case "isRewardedAvailable":
             handleIsRewardedAvailable(call, result: result)
+        case "requestAdBanner":
+            handleRequestAdBanner(call, result: result)
         case "showAdBanner":
             handleShowAdBanner(call, result: result)
         case "hideAdBanner":
@@ -112,6 +115,15 @@ public class DigitalTurbinePlugin: NSObject, FlutterPlugin {
             return
         }
         isRewardedAvailable(placementId: placementId, result: result)
+    }
+    
+    private func handleRequestAdBanner(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        guard let args = call.arguments as? [String: Any],
+              let placementId = args["placementId"] as? String else {
+            result(FlutterError(code: "INVALID_ARGUMENTS", message: "Invalid arguments for showAdBanner", details: nil))
+            return
+        }
+        requestAdBanner(placementId: placementId, result: result)
     }
     
     private func handleShowAdBanner(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -237,6 +249,15 @@ extension DigitalTurbinePlugin {
 
 
 extension DigitalTurbinePlugin {
+    private func requestAdBanner(placementId: String, result: @escaping FlutterResult) {
+        FYBBanner.delegate = self
+        
+        let options = FYBBannerOptions(placementId: placementId, size: .MREC)
+        FYBBanner.request(with: options)
+        
+        result("AD_REQUESTED")
+    }
+    
     private func showAdBanner(placementId: String, result: @escaping FlutterResult) {
         let options = FYBBannerOptions(placementId: placementId, size: .MREC)
         
@@ -267,35 +288,35 @@ extension DigitalTurbinePlugin {
 
 extension DigitalTurbinePlugin: FYBRewardedDelegate {
     public func rewardedIsAvailable(_ placementId: String) {
-        channel?.invokeMethod("onRewardedAvailable", arguments: ["placementId": placementId])
+        DigitalTurbinePlugin.channel?.invokeMethod("onRewardedAvailable", arguments: ["placementId": placementId])
     }
     
     public func rewardedIsUnavailable(_ placementId: String) {
-        channel?.invokeMethod("onRewardedUnavailable", arguments: ["placementId": placementId])
+        DigitalTurbinePlugin.channel?.invokeMethod("onRewardedUnavailable", arguments: ["placementId": placementId])
     }
     
     public func rewardedDidShow(_ placementId: String, impressionData: FYBImpressionData) {
-        channel?.invokeMethod("onRewardedShow", arguments: ["placementId": placementId, "impressionData": impressionData.description])
+        DigitalTurbinePlugin.channel?.invokeMethod("onRewardedShow", arguments: ["placementId": placementId, "impressionData": impressionData.description])
     }
     
     public func rewardedDidFail(toShow placementId: String, withError error: Error, impressionData: FYBImpressionData) {
-        channel?.invokeMethod("onRewardedShowFail", arguments: ["placementId": placementId, "error": error.localizedDescription, "impressionData": impressionData.description])
+        DigitalTurbinePlugin.channel?.invokeMethod("onRewardedShowFail", arguments: ["placementId": placementId, "error": error.localizedDescription, "impressionData": impressionData.description])
     }
     
     public func rewardedDidClick(_ placementId: String) {
-        channel?.invokeMethod("onRewardedClick", arguments: ["placementId": placementId])
+        DigitalTurbinePlugin.channel?.invokeMethod("onRewardedClick", arguments: ["placementId": placementId])
     }
     
     public func rewardedDidComplete(_ placementId: String, userRewarded: Bool) {
-        channel?.invokeMethod("onRewardedComplete", arguments: ["placementId": placementId, "userRewarded": userRewarded])
+        DigitalTurbinePlugin.channel?.invokeMethod("onRewardedComplete", arguments: ["placementId": placementId, "userRewarded": userRewarded])
     }
     
     public func rewardedDidDismiss(_ placementId: String) {
-        channel?.invokeMethod("onRewardedDismiss", arguments: ["placementId": placementId])
+        DigitalTurbinePlugin.channel?.invokeMethod("onRewardedDismiss", arguments: ["placementId": placementId])
     }
     
     public func rewardedWillRequest(_ placementId: String, withRequestId requestId: String) {
-        channel?.invokeMethod("onRewardedWillRequest", arguments: ["placementId": placementId, "requestId": requestId])
+        DigitalTurbinePlugin.channel?.invokeMethod("onRewardedWillRequest", arguments: ["placementId": placementId, "requestId": requestId])
     }
 }
 
@@ -310,7 +331,8 @@ extension DigitalTurbinePlugin: FYBBannerDelegate {
             "placementId": banner.options.placementId,
             "impressionData": impressionData.jsonString ?? "unknown"
         ]
-        channel?.invokeMethod("onBannerLoad", arguments: args)
+        DigitalTurbinePlugin.bannerView = banner
+        DigitalTurbinePlugin.channel?.invokeMethod("onBannerLoad", arguments: args)
     }
     
     public func bannerDidFail(toLoad placementId: String, withError error: Error) {
@@ -318,7 +340,7 @@ extension DigitalTurbinePlugin: FYBBannerDelegate {
             "placementId": placementId,
             "error": error.localizedDescription
         ]
-        channel?.invokeMethod("onBannerError", arguments: args)
+        DigitalTurbinePlugin.channel?.invokeMethod("onBannerError", arguments: args)
     }
     
     public func bannerDidShow(_ banner: FYBBannerAdView, impressionData: FYBImpressionData) {
@@ -326,12 +348,12 @@ extension DigitalTurbinePlugin: FYBBannerDelegate {
             "placementId": banner.options.placementId,
             "impressionData": impressionData.jsonString ?? "unknown"
         ]
-        channel?.invokeMethod("onBannerShow", arguments: args)
+        DigitalTurbinePlugin.channel?.invokeMethod("onBannerShow", arguments: args)
     }
     
     public func bannerDidClick(_ banner: FYBBannerAdView) {
         let args: [String: Any] = ["placementId": banner.options.placementId]
-        channel?.invokeMethod("onBannerClick", arguments: args)
+        DigitalTurbinePlugin.channel?.invokeMethod("onBannerClick", arguments: args)
     }
     
     public func bannerWillRequest(_ placementId: String, withRequestId requestId: String) {
@@ -339,7 +361,7 @@ extension DigitalTurbinePlugin: FYBBannerDelegate {
             "placementId": placementId,
             "requestId": requestId
         ]
-        channel?.invokeMethod("onBannerRequestStart", arguments: args)
+        DigitalTurbinePlugin.channel?.invokeMethod("onBannerRequestStart", arguments: args)
     }
 }
 
@@ -359,7 +381,7 @@ class BannerView: NSObject, FlutterPlatformView, FYBBannerDelegate {
     ) {
         self.containerView = UIView(frame: frame)
         self.placementId = (args as? [String: Any])?["placementId"] as? String ?? ""
-        self.channel = FlutterMethodChannel(name: "digital_turbine_banner_view_\(viewId)", binaryMessenger: messenger)
+        self.channel = FlutterMethodChannel(name: "digital_turbine_banner_view_1", binaryMessenger: messenger)
         
         super.init()
         
@@ -385,7 +407,11 @@ class BannerView: NSObject, FlutterPlatformView, FYBBannerDelegate {
     
     private func loadAd() {
         let options = FYBBannerOptions(placementId: placementId, size: .MREC)
-        FYBBanner.show(in: containerView, options: options)
+         if ((bannerView ?? DigitalTurbinePlugin.bannerView ) != nil ){
+            containerView.addSubview((bannerView ?? DigitalTurbinePlugin.bannerView)!)
+        } else {
+            print("Banner VIEW is EMPTY")
+        }
     }
     
     private func disposeAd() {
@@ -403,7 +429,7 @@ class BannerView: NSObject, FlutterPlatformView, FYBBannerDelegate {
             "placementId": banner.options.placementId,
             "impressionData": impressionData.jsonString ?? ""
         ]
-        channel.invokeMethod("onBannerLoad", arguments: args)
+        DigitalTurbinePlugin.channel?.invokeMethod("onBannerLoad", arguments: args)
     }
     
     func bannerDidFail(toLoad placementId: String, withError error: Error) {
@@ -411,7 +437,7 @@ class BannerView: NSObject, FlutterPlatformView, FYBBannerDelegate {
             "placementId": placementId,
             "error": error.localizedDescription
         ]
-        channel.invokeMethod("onBannerError", arguments: args)
+        DigitalTurbinePlugin.channel?.invokeMethod("onBannerError", arguments: args)
     }
     
     func bannerDidShow(_ banner: FYBBannerAdView, impressionData: FYBImpressionData) {
@@ -419,12 +445,12 @@ class BannerView: NSObject, FlutterPlatformView, FYBBannerDelegate {
             "placementId": banner.options.placementId,
             "impressionData": impressionData.jsonString ?? ""
         ]
-        channel.invokeMethod("onBannerShow", arguments: args)
+        DigitalTurbinePlugin.channel?.invokeMethod("onBannerShow", arguments: args)
     }
     
     func bannerDidClick(_ banner: FYBBannerAdView) {
         let args: [String: Any] = ["placementId": banner.options.placementId]
-        channel.invokeMethod("onBannerClick", arguments: args)
+        DigitalTurbinePlugin.channel?.invokeMethod("onBannerClick", arguments: args)
     }
     
     deinit {
@@ -436,12 +462,12 @@ class BannerView: NSObject, FlutterPlatformView, FYBBannerDelegate {
 
 class BannerViewFactory: NSObject, FlutterPlatformViewFactory {
     private let messenger: FlutterBinaryMessenger
-
+    
     init(messenger: FlutterBinaryMessenger) {
         self.messenger = messenger
         super.init()
     }
-
+    
     func create(
         withFrame frame: CGRect,
         viewIdentifier viewId: Int64,
@@ -454,7 +480,7 @@ class BannerViewFactory: NSObject, FlutterPlatformViewFactory {
             binaryMessenger: messenger
         )
     }
-
+    
     public func createArgsCodec() -> FlutterMessageCodec & NSObjectProtocol {
         return FlutterStandardMessageCodec.sharedInstance()
     }

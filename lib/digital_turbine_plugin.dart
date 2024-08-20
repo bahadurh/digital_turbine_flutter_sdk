@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/services.dart';
 
-export 'digital_turbine_banner_view.dart';
+export 'banner/digital_turbine_banner_view.dart';
 
 class DigitalTurbinePlugin {
   static const MethodChannel _channel = MethodChannel('digital_turbine_plugin');
@@ -88,6 +88,10 @@ class DigitalTurbinePlugin {
   ///
   /// Banner Ad Methods
   ///
+
+  static Future<void> requestAdBanner(String placementId) async {
+    await _channel.invokeMethod('requestAdBanner', {'placementId': placementId});
+  }
   static Future<void> showAdBanner(String placementId) async {
     await _channel.invokeMethod('showAdBanner', {'placementId': placementId});
   }
@@ -100,8 +104,8 @@ class DigitalTurbinePlugin {
     await _channel.invokeMethod('disposeAdBanner', {'placementId': placementId});
   }
 
-  static void setAdBannerListener(DigitalTurbineAdBannerListener listener) {
-    _channel.setMethodCallHandler((call) async {
+  static void setAdBannerListener(DigitalTurbineAdBannerListener listener, {MethodChannel? channel}) {
+    (channel ?? _channel).setMethodCallHandler((call) async {
       switch (call.method) {
         case 'onBannerLoad':
           listener.onAdBannerLoaded(call.arguments['placementId'], call.arguments['impressionData']);
