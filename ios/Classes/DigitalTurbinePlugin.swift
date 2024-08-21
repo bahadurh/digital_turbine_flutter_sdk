@@ -1,7 +1,6 @@
 import Flutter
 import UIKit
 import FairBidSDK
-import GoogleMobileAds
 
 public class DigitalTurbinePlugin: NSObject, FlutterPlugin {
     static var channel: FlutterMethodChannel?
@@ -181,9 +180,7 @@ public class DigitalTurbinePlugin: NSObject, FlutterPlugin {
             options.isChild = isChild
         }
         
-        GADMobileAds.sharedInstance().start { status in
-            FairBid.start(withAppId: appId, options: options)
-        }
+        FairBid.start(withAppId: appId, options: options)
         
         result(nil)
     }
