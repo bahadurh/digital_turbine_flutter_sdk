@@ -15,8 +15,7 @@ A new Flutter plugin for Digital Turbine SDK.
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'
-  s.dependency 'FairBidSDK', '~> 3.53.0'
-  s.dependency 'Google-Mobile-Ads-SDK', '~> 11.7.0'
+  s.dependency 'FairBidSDK', '~> 3.53.0' 
   s.platform = :ios, '11.0'
 
   s.static_framework = true
