@@ -53,15 +53,26 @@ class _DigitalTurbineBannerViewWithControllerState extends State<DigitalTurbineB
         onPlatformViewCreated: _onPlatformViewCreated,
       );
     } else {
-      platformView = kDebugMode
-          ? Text(
-              '$defaultTargetPlatform is not yet supported by the digital_turbine_banner_view plugin',
-              style: const TextStyle(color: Colors.red),
-            )
-          : const SizedBox.shrink();
+      platformView = Text('Banner ads not supported on this platform');
     }
 
-    return SizedBox(width: widget.controller.size.width, height: widget.controller.size.height, child: platformView);
+    return Container(
+      width: widget.controller.size.width,
+      height: widget.controller.size.height,
+      color: Colors.transparent,
+      child: Stack(
+        children: [
+          platformView,
+          if (!widget.controller.isAdLoaded)
+            Container(
+              color: Colors.grey[300],
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else
+            Text('Ad loaded')
+        ],
+      ),
+    );
   }
 
   @override
@@ -83,13 +94,14 @@ class DTController implements DigitalTurbineAdBannerListener {
 
   final _channel = const MethodChannel('digital_turbine_banner_view_1');
   bool _isAdLoaded = false;
+  bool _isAdLoading = false;
 
-  Future<void> loadAd() async {
-    try {
-      await DigitalTurbinePlugin.requestAdBanner(placementId);
-    } on PlatformException catch (e) {
-      print("Failed to load ad: ${e.message}");
+  void loadAd() {
+    if (_isAdLoading) {
+      debugPrint("Ad is already loading");
+      return;
     }
+    DigitalTurbinePlugin.requestAdBanner(placementId);
   }
 
   Future<void> showAd() async {
@@ -109,16 +121,19 @@ class DTController implements DigitalTurbineAdBannerListener {
   void onAdBannerError(String placementId, String error) {
     debugPrint("onAdBannerError: $error");
     isAdLoaded = false;
+    _isAdLoading = false;
   }
 
   @override
   void onAdBannerLoaded(String placementId, String impressionData) {
     debugPrint("onAdBannerLoaded");
     isAdLoaded = true;
+    _isAdLoading = false;
   }
 
   @override
   void onAdBannerRequestStart(String placementId, String requestId) {
+    _isAdLoading = true;
     debugPrint("onAdBannerRequestStart, requestId: $requestId");
   }
 
